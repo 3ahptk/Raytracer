@@ -8,9 +8,9 @@
 #define trace if (debug) write
 
 char buffer[256];
-const unsigned int width = 800;
-const unsigned int height = 600;
-unsigned char * ImageArray;
+const unsigned int width = 512;
+const unsigned int height = 512;
+unsigned char ImageArray[height][width];
 
 int main(int argc, char* argv[]){
   if(argc<2||argc>3){
@@ -30,11 +30,18 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
-  ImageArray = malloc(width*height*sizeof(unsigned char));
+  int x;
+  int y;
+  for(x=0; x<height; x++){
+    for(y=0; y<width; y++) {
+      ImageArray[x][y]=100;
+    }
+  }
 
-  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
+  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, sizeof ImageArray[0]);
+  trace(1, buffer, strlen(buffer));
 
-  free(ImageArray);
+  stbi_write_png(filename, width, height, 3, ImageArray, sizeof ImageArray[0]);
 
-  exit(EXIT_SUCCESS);
+  return 1;
 }
