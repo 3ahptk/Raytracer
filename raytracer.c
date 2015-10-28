@@ -4,10 +4,15 @@
 #include "msg.h"
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
+#define debug 1
+#define trace if (debug) write
+
+char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-unsigned char * ImageArray;
+unsigned char ImageArray[height][width];
 
 typedef struct {
 	float vector[3];
@@ -24,10 +29,10 @@ typedef struct {
 
 int main(int argc, char* argv[]){
   if(argc<2||argc>3){
-    fprintf (stderr, "Invalid number of arguments: Expected 1 got %d\n", argc-1);
-    exit (EXIT_FAILURE);
+    sprintf(buffer, "Invalid number of arguments: Expected 1 got %d\n", argc-1);
+  	write(2, buffer, strlen(buffer));
+    return -1;
   }
-
   char* filename;
 
   if(strcmp( argv[2], "reference" )) {
@@ -39,7 +44,13 @@ int main(int argc, char* argv[]){
     exit (EXIT_FAILURE);
   }
 
-  ImageArray = malloc(width*height*sizeof(unsigned char));
+  int x;
+  int y;
+  for(x=0; x<height; x++){
+    for(y=0; y<width; y++) {
+      ImageArray[x][y]=100;
+    }
+  }
 
 	for (int x=0; x<512; x++) {
 		for (int y=0; y<512; y++) {
@@ -47,12 +58,12 @@ int main(int argc, char* argv[]){
 			// Calculate and set the color of the pixel.
 		}
 	}
+  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, sizeof ImageArray[0]);
+  trace(1, buffer, strlen(buffer));
 
-  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
+  stbi_write_png(filename, width, height, 3, ImageArray, sizeof ImageArray[0]);
 
-  free(ImageArray);
-
-  exit(EXIT_SUCCESS);
+  return 1;
 }
 
 void getRay(Perspective p, vec2 screenCoord, Ray *ray) { 
