@@ -12,7 +12,14 @@
 char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-unsigned char ImageArray[height][width];
+unsigned char ImageArray[height*width*3];
+
+enum material {
+    reflective = 0,
+		red = 1,
+    green = 2,
+    blue = 3
+};
 
 typedef struct {
 	float vector[3];
@@ -23,9 +30,23 @@ typedef struct {
 typedef struct {
 	float cameraPos[3];
 	float distanceToScreen;
-	const unsigned int widthWorld = 512;
-	const unsigned int widthPixels = 512;
+	const unsigned int widthWorld = width;
+	const unsigned int widthPixels = height;
 } Perspective;
+
+typedef struct {
+	float t;
+	Ray ray;
+	int objectCode;
+	Sphere * sph;
+	Triangle * tri;
+} RayHit;
+
+typedef struct {
+  float pos[3];
+  int radius;
+  int mat;
+} Sphere;
 
 int main(int argc, char* argv[]){
   if(argc<2||argc>3){
@@ -41,31 +62,65 @@ int main(int argc, char* argv[]){
     filename = "custom.png";
   } else {
     fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
-    exit (EXIT_FAILURE);
+    return -1;
   }
+
+	Sphere testSphere = malloc(sizeof(Sphere));
+	testSphere.pos[0] = 1;//x
+	testSphere.pos[1] = 0;//y
+	testSphere.pos[2] = 1;//z
+	testSphere.radius = 1;
+	testSphere.mat = 1;
 
   int x;
   int y;
-  for(x=0; x<height; x++){
-    for(y=0; y<width; y++) {
-      ImageArray[x][y]=100;
-    }
-  }
 
-	for (int x=0; x<512; x++) {
-		for (int y=0; y<512; y++) {
+	for (int x=0; x<height; x++) {
+		for (int y=0; y<width; y++) {
 			getRay();
 			// Calculate and set the color of the pixel.
+      ImageArray[512*x+3*y]=255;//blue
+			ImageArray[512*x+3*y-1]=255;//green
+			ImageArray[512*x+3*y-2]=255;//red
 		}
 	}
-  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, sizeof ImageArray[0]);
+  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, width*3);
   trace(1, buffer, strlen(buffer));
 
-  stbi_write_png(filename, width, height, 3, ImageArray, sizeof ImageArray[0]);
+  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
 
   return 1;
 }
 
-void getRay(Perspective p, vec2 screenCoord, Ray *ray) { 
-	
+int RaySphereIntersect(Ray *ray, Sphere *sph){
+  float e[3] = ray.vector;
+  float d[3] = ray.position;
+  float c[3] = sph.pos;
+  float r = sph.radius;
+  float eminc = 0;
+  vec3f_sub_new(eminc,e,c);
+  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(eminc,eminc)-(r*r);
+  float t = 0;
+  float tpos = 0;
+  float tneg = 0;
+
+  if(discriminant>0){//which one do I take?
+    t = (-vec3f_dot(e,c))/ vec3f_dot(d,d);
+  }else if(discriminant==0){
+    tpos = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
+    tneg = (-vec3f_dot(e,c) - sqrt( discriminant ) )/ vec3f_dot(d,d);
+
+    if(tpos<tneg){
+      t = tpos;
+    }else{
+      t = tneg;
+    }
+  }else{
+    t = 0;
+  }
+  return t;
+}
+
+void getRay(Perspective p, vec2 screenCoord, Ray *ray) {
+
 }
