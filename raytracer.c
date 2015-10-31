@@ -12,7 +12,7 @@
 char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-unsigned char ImageArray[height][width];
+unsigned char ImageArray[height * width * 3];
 
 typedef struct {
 	float vector[3];
@@ -21,15 +21,17 @@ typedef struct {
 } Ray;
 
 typedef struct {
-	float cameraPos[3];
-	float distanceToScreen;
-	const unsigned int widthWorld = 512;
+	const	float cameraPos[3] = {0.0,0.0,0.0};
+	const float distanceToScreen = 2;
+	const unsigned int widthWorld = 2;
 	const unsigned int widthPixels = 512;
 } Perspective;
 
+Perspective *perspective = NULL;
+
 int main(int argc, char* argv[]){
-  if(argc<2||argc>3){
-    sprintf(buffer, "Invalid number of arguments: Expected 1 got %d\n", argc-1);
+  if(argc<2 || argc>3){
+    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
   	write(2, buffer, strlen(buffer));
     return -1;
   }
@@ -46,18 +48,16 @@ int main(int argc, char* argv[]){
 
   int x;
   int y;
-  for(x=0; x<height; x++){
+  for(x=0; x<height; x++) {
     for(y=0; y<width; y++) {
-      ImageArray[x][y]=100;
+			getRay(perspective, float{x, y}, ray);
+
+			// Get the intersection in order to calculate the RGB color.
+
+      ImageArray[] = ;
     }
   }
 
-	for (int x=0; x<512; x++) {
-		for (int y=0; y<512; y++) {
-			getRay();
-			// Calculate and set the color of the pixel.
-		}
-	}
   sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, sizeof ImageArray[0]);
   trace(1, buffer, strlen(buffer));
 
@@ -66,6 +66,7 @@ int main(int argc, char* argv[]){
   return 1;
 }
 
-void getRay(Perspective p, vec2 screenCoord, Ray *ray) { 
-	
+void getRay(Perspective p, float[2] screenCoord, Ray *ray) { 
+	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
+	ray.position = (screenCoord, p.distanceToScreen);
 }
