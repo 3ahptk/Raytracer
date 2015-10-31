@@ -13,6 +13,9 @@ char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
 unsigned char ImageArray[height*width*3];
+int colorred[3] = {255,0,0};
+int colorgreen[3] = {0,255,0};
+int colorblue[3] = {0,0,255};
 
 enum material {
     reflective = 0,
