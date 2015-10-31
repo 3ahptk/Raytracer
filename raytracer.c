@@ -27,89 +27,50 @@ enum material {
 typedef struct {
 	float vector[3];
 	float position[3];
-	int numReflections = 10;
+	int numReflections;//=10;
 } Ray;
 
 typedef struct {
-	const	float cameraPos[3] = {0.0,0.0,0.0};
-	const float distanceToScreen = 2;
-	const unsigned int widthWorld = 2;
-	const unsigned int widthPixels = 512;
+	const	float cameraPos[3];// = {0.0,0.0,0.0};
+	const float distanceToScreen;// = 2;
+	const unsigned int widthWorld;// = 2;
+	const unsigned int widthPixels;// = 512;
 } Perspective;
 
-Perspective *perspective = NULL;
+typedef struct {
+  float pos[3];
+  float radius;
+  int mat;
+} Sphere;
 
 typedef struct {
 	float t;
 	Ray ray;
 	int objectCode;
-	Sphere * sph;
-	Triangle * tri;
+	struct Sphere * sph;
+	struct Triangle * tri;
 } RayHit;
 
-typedef struct {
-  float pos[3];
-  int radius;
-  int mat;
-} Sphere;
+Perspective * perspective = NULL;
 
-int main(int argc, char* argv[]){
-  if(argc<2 || argc>3){
-    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
-  	write(2, buffer, strlen(buffer));
-    return -1;
-  }
-  char* filename;
-
-  if(strcmp( argv[2], "reference" )) {
-    filename = "reference.png";
-  } else if(strcmp( argv[2], "custom")) {
-    filename = "custom.png";
-  } else {
-    fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
-    return -1;
-  }
-
-	Sphere testSphere = malloc(sizeof(Sphere));
-	testSphere.pos[0] = 1;//x
-	testSphere.pos[1] = 0;//y
-	testSphere.pos[2] = 1;//z
-	testSphere.radius = 1;
-	testSphere.mat = 1;
-
-  int x;
-  int y;
-
-	for (int x=0; x<height; x++) {
-		for (int y=0; y<width; y++) {
-			getRay();
-			// Calculate and set the color of the pixel.
-      ImageArray[512*x+3*y]=255;//blue
-			ImageArray[512*x+3*y-1]=255;//green
-			ImageArray[512*x+3*y-2]=255;//red
-		}
-	}
-  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, width*3);
-  trace(1, buffer, strlen(buffer));
-
-  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
-
-  return 1;
+void getRay(Perspective p, float screenCoord[2], Ray * ray) {
+	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
+	ray->position = (screenCoord, p.distanceToScreen);
 }
 
-void getRay(Perspective p, float[2] screenCoord, Ray *ray) { 
-	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
-	ray.position = (screenCoord, p.distanceToScreen);
-}
+int RaySphereIntersect(Ray * ray, Sphere * sph){
+  float e[3];
+  float d[3];
+  float c[3];
 
-int RaySphereIntersect(Ray *ray, Sphere *sph){
-  float e[3] = ray.vector;
-  float d[3] = ray.position;
-  float c[3] = sph.pos;
-  float r = sph.radius;
+	memcpy(e,ray->vector,sizeof(float[3]));
+	memcpy(d,ray->position,sizeof(float[3]));
+	memcpy(c,sph->pos,sizeof(float[3]));
+
+  float r = sph->radius;
   float eminc = 0;
-  vec3f_sub_new(eminc,e,c);
-  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(eminc,eminc)-(r*r);
+  vec3f_sub_new(&eminc,e,c);
+  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(&eminc,&eminc)-(r*r);
   float t = 0;
   float tpos = 0;
   float tneg = 0;
@@ -131,3 +92,46 @@ int RaySphereIntersect(Ray *ray, Sphere *sph){
   return t;
 }
 
+
+int main(int argc, char* argv[]){
+  if(argc<2 || argc>3){
+    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
+  	write(2, buffer, strlen(buffer));
+    return -1;
+  }
+  char* filename;
+
+  if(strcmp( argv[2], "reference" )) {
+    filename = "reference.png";
+  } else if(strcmp( argv[2], "custom")) {
+    filename = "custom.png";
+  } else {
+    fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
+    return -1;
+  }
+
+	Sphere testSphere = {
+			{1,0,1},
+			1,
+			1
+	 };
+
+  unsigned int x;
+  unsigned int y;
+
+	for (x=0; x<height; x++) {
+		for (y=0; y<width; y++) {
+			//getRay(perspective, float screenCoord[2], Ray * ray);
+			// Calculate and set the color of the pixel.
+      ImageArray[512*x+3*y]=255;//blue
+			ImageArray[512*x+3*y-1]=255;//green
+			ImageArray[512*x+3*y-2]=255;//red
+		}
+	}
+  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %u)\n",filename, width, height, 3, width*3);
+  trace(1, buffer, strlen(buffer));
+
+  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
+
+  return 1;
+}
