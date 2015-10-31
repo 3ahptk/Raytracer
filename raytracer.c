@@ -31,11 +31,13 @@ typedef struct {
 } Ray;
 
 typedef struct {
-	float cameraPos[3];
-	float distanceToScreen;
-	const unsigned int widthWorld = width;
-	const unsigned int widthPixels = height;
+	const	float cameraPos[3] = {0.0,0.0,0.0};
+	const float distanceToScreen = 2;
+	const unsigned int widthWorld = 2;
+	const unsigned int widthPixels = 512;
 } Perspective;
+
+Perspective *perspective = NULL;
 
 typedef struct {
 	float t;
@@ -52,8 +54,8 @@ typedef struct {
 } Sphere;
 
 int main(int argc, char* argv[]){
-  if(argc<2||argc>3){
-    sprintf(buffer, "Invalid number of arguments: Expected 1 got %d\n", argc-1);
+  if(argc<2 || argc>3){
+    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
   	write(2, buffer, strlen(buffer));
     return -1;
   }
@@ -95,6 +97,11 @@ int main(int argc, char* argv[]){
   return 1;
 }
 
+void getRay(Perspective p, float[2] screenCoord, Ray *ray) { 
+	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
+	ray.position = (screenCoord, p.distanceToScreen);
+}
+
 int RaySphereIntersect(Ray *ray, Sphere *sph){
   float e[3] = ray.vector;
   float d[3] = ray.position;
@@ -124,6 +131,3 @@ int RaySphereIntersect(Ray *ray, Sphere *sph){
   return t;
 }
 
-void getRay(Perspective p, vec2 screenCoord, Ray *ray) {
-
-}
