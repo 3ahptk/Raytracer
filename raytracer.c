@@ -2,7 +2,9 @@
 #include "stb_image_write.h"
 #include "vecmat.h"
 #include "msg.h"
+#include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -12,7 +14,8 @@
 char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-unsigned char ImageArray[height*width*3];
+const unsigned int arraysize = height*width*3;
+unsigned char ImageArray[arraysize];
 int colorred[3] = {255,0,0};
 int colorgreen[3] = {0,255,0};
 int colorblue[3] = {0,0,255};
@@ -93,6 +96,22 @@ int RaySphereIntersect(Ray * ray, Sphere * sph){
 }
 
 
+static inline void progress(int x, int n)
+{
+		if ( x % (n/100 +1) != 0 ) return;
+    float r = x/(float)n;
+    int c = r * 80;
+    printf("%3d%% [", (int)(r*100) );
+
+    for (int x=0; x<c; x++){
+       printf("█");
+		}
+    for (int x=c; x<80; x++){
+       printf(" ");
+		}
+    printf("]\n\033[F\033[J");
+}
+
 int main(int argc, char* argv[]){
   if(argc!=2){
     sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
@@ -101,7 +120,8 @@ int main(int argc, char* argv[]){
   }
   char * filename;
 
-
+	time_t t;
+	srand((unsigned) time(&t));//seed the random
 
   if(strcmp( argv[1], "reference" ) == 0) {
 		filename = "reference.png";
@@ -124,20 +144,24 @@ int main(int argc, char* argv[]){
 			//getRay(perspective, float screenCoord[2], Ray * ray);
 			// Calculate and set the color of the pixel.
 			int pos = (x * width + y) * 3;
-      ImageArray[pos]=255;//blue
-			ImageArray[pos+1]=255;//green
-			ImageArray[pos+2]=255;//red
-
-			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, height*width*3);
-			trace(1, buffer, strlen(buffer));
-			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, height*width*3);
-			trace(1, buffer, strlen(buffer));
-			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+2, height*width*3);
-			trace(1, buffer, strlen(buffer));
+      ImageArray[pos]=rand() % 255;//blue channel
+			ImageArray[pos+1]=rand() % 255;//green channel
+			ImageArray[pos+2]=rand() % 255;//red channel
+			progress(pos, arraysize);
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, height*width*3);
+			// trace(1, buffer, strlen(buffer));
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, height*width*3);
+			// trace(1, buffer, strlen(buffer));
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+2, height*width*3);
+			// trace(1, buffer, strlen(buffer));
 		}
 	}
-  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %u)\n",filename, width, height, 3, width*3);
-  trace(1, buffer, strlen(buffer));
+	//finalize the progress bar
+	printf("%3d%% [", 100);
+	for (int x=0; x<80; x++){
+		 printf("█");
+	}
+	printf("]\n");
 
   stbi_write_png(filename, width, height, 3, ImageArray, width*3);
 
