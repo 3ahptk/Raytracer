@@ -722,7 +722,7 @@ void mat4d_rotateEuler_new(double result[16], double a1_degrees, double a2_degre
     be the same (or very similar) to the input matrix. Kevin
     Shoemake's "Euler Angle Conversion" in Graphics Gems IV also
     served as a source of inspiration for this code.
-    
+
     @param angles The resulting Euler angles in degrees. The first and
     last angles will be in the range of -180 and 180 degrees. If using
     traditional Euler angles (first and last axis are the same), the
@@ -730,9 +730,9 @@ void mat4d_rotateEuler_new(double result[16], double a1_degrees, double a2_degre
     (first and last axis are different), the second angle will be
     between -90 and 90. If the second angle is near the range limits,
     gimbal lock has occurred or almost has occurred.
-    
+
     @param m The rotation matrix to calculate the Euler angles from.
-    
+
     @param order The axis ordering to use (for example "XYZ"). "XYZ"
     is commonly used in graphics and aerospace engineering (in OpenGL,
     where you are looking down -Z, the angles correspond to pitch,
@@ -1158,7 +1158,7 @@ void mat4d_rotateAxis_new(double result[16], double degrees, double axisX, doubl
     http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
 
     @param matrix The location to store the output matrix.
-   
+
     @param quat The input quaternion. The quaternion does not need
     to be unit length.
 */
@@ -1277,7 +1277,7 @@ void mat4d_rotateQuat_new(double matrix[16], double x, double y, double z, doubl
     It is also based code in quat.c on VRPN 7.26 (public domain).
 
     @param matrix The location to store the output matrix.
-   
+
     @param quat The input quaternion. The quaternion does not need
     to be unit length.
 */
@@ -1307,12 +1307,12 @@ void quatf_from_mat3f(float quat[4], const float matrix[9])
 		   i = Z;
 	   int j = next[i];
 	   int k = next[j];
-	   
+
 	   float s = sqrtf( (matrix[mat3_getIndex(i,i)] - (matrix[mat3_getIndex(j,j)] + matrix[mat3_getIndex(k,k)])) + 1.0 );
 	   quat[i] = s * 0.5;
-	   
+
 	   s = 0.5 / s;
-	   
+
 	   quat[W] = (matrix[mat3_getIndex(k,j)] - matrix[mat3_getIndex(j,k)]) * s;
 	   quat[j] = (matrix[mat3_getIndex(j,i)] + matrix[mat3_getIndex(i,j)]) * s;
 	   quat[k] = (matrix[mat3_getIndex(k,i)] + matrix[mat3_getIndex(i,k)]) * s;
@@ -1345,10 +1345,10 @@ void quatd_from_mat3d(double quat[4], const double matrix[9])
 		   i = Z;
 	   int j = next[i];
 	   int k = next[j];
-	   
+
 	   float s = sqrtf( (matrix[mat3_getIndex(i,i)] - (matrix[mat3_getIndex(j,j)] + matrix[mat3_getIndex(k,k)])) + 1.0 );
 	   quat[i] = s * 0.5;
-	   
+
 	   s = 0.5 / s;
 
 	   quat[W] = (matrix[mat3_getIndex(k,j)] - matrix[mat3_getIndex(j,k)]) * s;
@@ -1372,7 +1372,7 @@ void quatd_from_mat4d(double quat[4], const double matrix[16])
 	quatd_from_mat3d(quat, tmpMat);
 }
 
-/** Creates a quaternion (x,y,z,w) based on an axis and the number of degrees to rotate around that axis. 
+/** Creates a quaternion (x,y,z,w) based on an axis and the number of degrees to rotate around that axis.
 
     Based code in quat.c on VRPN 7.26 (public domain).
 
@@ -1488,7 +1488,7 @@ void quatf_slerp_new(float result[4], const float start[4], const float end[4], 
 		cosOmega = -cosOmega;
 		vec4f_scalarMult(copyOfStart, -1);
 	}
-	
+
 	if(1+cosOmega > 1e-10)
 	{
 		float startScale, endScale;
@@ -1546,7 +1546,7 @@ void quatd_slerp_new(double result[4], const double start[4], const double end[4
 		cosOmega = -cosOmega;
 		vec4d_scalarMult(copyOfStart, -1);
 	}
-	
+
 	if(1+cosOmega > 1e-10)
 	{
 		double startScale, endScale;
@@ -1580,7 +1580,7 @@ void quatd_slerp_new(double result[4], const double start[4], const double end[4
 	vec4d_normalize(result);
 }
 
-	
+
 
 
 /** Creates a new 4x4 float translation matrix with the rest of the matrix set to the identity.
@@ -1657,7 +1657,7 @@ void mat4f_frustum_new(float result[16], float left, float right, float bottom, 
 		msg(WARNING, "Near plane should be a value greater than 0.");
 		msg(WARNING, "Frustum values were: l=%f r=%f b=%f t=%f n=%f f=%f",
 		    left, right, bottom, top, near, far);
-		
+
 	}
 	if(left > right || bottom > top || near > far)
 	{
@@ -1707,7 +1707,7 @@ void mat4d_frustum_new(double result[16], double left, double right, double bott
 		msg(WARNING, "Near plane should be a value greater than 0.");
 		msg(WARNING, "Frustum values were: l=%f r=%f b=%f t=%f n=%f f=%f",
 		    left, right, bottom, top, near, far);
-		
+
 	}
 	if(left > right || bottom > top || near > far)
 	{
@@ -2085,7 +2085,7 @@ void mat4f_stack_pop(list *l)
     the contents of the stack.
 
     @param l The stack to retrieve the top matrix from.
-    
+
     @param m The location to copy the top matrix into.
  */
 void mat4f_stack_peek(const list *l, float m[16])
@@ -2103,7 +2103,7 @@ void mat4f_stack_peek(const list *l, float m[16])
 
     @param m The matrix to be multiplied against the top matrix on the
     stack.
-    
+
     @return If l is NULL, a newly allocated stack that should
     eventually be free()'d with list_free(). Otherwise, the same value
     as l.
