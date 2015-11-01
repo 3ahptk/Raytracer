@@ -1,7 +1,7 @@
 .SUFFIXES: .c .o
 CC = gcc
 EXEC = ray
-CCFLAGS = -Wall -std=gnu99
+CCFLAGS = -Wall -Wextra
 SRC = raytracer.c
 OBJS = raytracer.o
 OUT = reference.png custom.png
