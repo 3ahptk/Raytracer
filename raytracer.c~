@@ -2,6 +2,7 @@
 #include "stb_image_write.h"
 #include "vecmat.h"
 #include "msg.h"
+#include "msg.c"
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,13 +13,12 @@
 #define trace if (debug) write
 
 // Set up the header for all of the methods.
-void getRay(Perspective p, float screenCoord[2], Ray *ray);
 
 char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-const unsigned int arraysize = height*width*3;
-unsigned char ImageArray[arraysize];
+const unsigned int arraysize = 512*512*3;
+unsigned char ImageArray[512*512*3];	
 int colorred[3] = {255,0,0};
 int colorgreen[3] = {0,255,0};
 int colorblue[3] = {0,0,255};
@@ -33,7 +33,6 @@ enum material {
 typedef struct {
 	float vector[3];
 	float position[3];
-<<<<<<< HEAD
 	int numReflections; //10
 } Ray;
 
@@ -42,16 +41,6 @@ typedef struct {
 	const float distanceToScreen; //2
 	const unsigned int widthWorld; //2
 	const unsigned int widthPixels; //512
-=======
-	int numReflections;//=10;
-} Ray;
-
-typedef struct {
-	const	float cameraPos[3];// = {0.0,0.0,0.0};
-	const float distanceToScreen;// = 2;
-	const unsigned int widthWorld;// = 2;
-	const unsigned int widthPixels;// = 512;
->>>>>>> e1e33a2d277fbb1dad174f8fa839ad082c6118e3
 } Perspective;
 
 typedef struct {
@@ -68,99 +57,23 @@ typedef struct {
 	struct Triangle * tri;
 } RayHit;
 
-<<<<<<< HEAD
-typedef struct {
-  float pos[3];
-  int radius;
-  int mat;
-} Sphere;
-
 typedef struct {
 	float pos[3];
-	
 } Triangle;
 
-void getRay(Perspective p, float screenCoord[2], Ray *ray) { 
-	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
-	ray.position = (screenCoord, p.distanceToScreen);
+
+void getRay(Perspective * p, float screenCoord[2], Ray * ray) { 
+	float srcVec[3] = {screenCoord[0], screenCoord[1], p->distanceToScreen};
+	vec3f_normalize_new(srcVec, ray->vector);
+	memcpy(ray->position,srcVec,sizeof(float[3]));
 }
 
-int RaySphereIntersect(Ray *ray, Sphere *sph){
-  float e[3] = ray.vector;
-  float d[3] = ray.position;
-  float c[3] = sph.pos;
-  float r = sph.radius;
-  float eminc = 0;
-  vec3f_sub_new(eminc,e,c);
-  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(eminc,eminc)-(r*r);
-  float t = 0;
-  float tpos = 0;
-  float tneg = 0;
-
-  if(discriminant>0){//which one do I take?
-    t = (-vec3f_dot(e,c))/ vec3f_dot(d,d);
-  }else if(discriminant==0){
-    tpos = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
-    tneg = (-vec3f_dot(e,c) - sqrt( discriminant ) )/ vec3f_dot(d,d);
-
-    if(tpos<tneg){
-      t = tpos;
-    }else{
-      t = tneg;
-    }
-  }else{
-    t = 0;
-  }
-  return t;
-}
-
-int RayTriangleIntersect(Ray *ray, Triangle *tri) {
+/*
+int RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	
 }
-
-int main(int argc, char* argv[]){
-  if(argc<2 || argc>3){
-    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
-  	write(2, buffer, strlen(buffer));
-    return -1;
-  }
-  char* filename;
-
-  if(strcmp( argv[2], "reference" )) {
-    filename = "reference.png";
-  } else if(strcmp( argv[2], "custom")) {
-    filename = "custom.png";
-  } else {
-    fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
-    return -1;
-  }
-=======
-Perspective * perspective = NULL;
->>>>>>> e1e33a2d277fbb1dad174f8fa839ad082c6118e3
-
-// void getRay(Perspective p, float screenCoord[2], Ray * ray) {
-// 	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
-// 	ray->position = (screenCoord, p.distanceToScreen);
-// }
-
-<<<<<<< HEAD
-	for (int x=0; x<height; x++) {
-		for (int y=0; y<width; y++) {
-			getRay();
-		
-			
-
-			// Calculate and set the color of the pixel.
-      ImageArray[512*x+3*y]=255;//blue
-			ImageArray[512*x+3*y-1]=255;//green
-			ImageArray[512*x+3*y-2]=255;//red
-		}
-	}
-  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, width*3);
-  trace(1, buffer, strlen(buffer));
-
+*/
 	
-=======
 int RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];
   float d[3];
@@ -262,7 +175,6 @@ int main(int argc, char* argv[]){
 		 printf("█");
 	}
 	printf("]\n");
->>>>>>> e1e33a2d277fbb1dad174f8fa839ad082c6118e3
 
   stbi_write_png(filename, width, height, 3, ImageArray, width*3);
 
