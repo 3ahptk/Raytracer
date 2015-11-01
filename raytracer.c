@@ -8,14 +8,15 @@
 #include <string.h>
 #include <unistd.h>
 
+#define WIDTH 512
+#define HEIGHT 512
+#define ARRAYSIZE WIDTH*HEIGHT*3
+
 #define debug 1
 #define trace if (debug) write
 
 char buffer[256];
-const unsigned int width = 512;
-const unsigned int height = 512;
-const unsigned int arraysize = height*width*3;
-unsigned char ImageArray[arraysize];
+unsigned char ImageArray[ARRAYSIZE];
 int colorred[3] = {255,0,0};
 int colorgreen[3] = {0,255,0};
 int colorblue[3] = {0,0,255};
@@ -54,7 +55,7 @@ typedef struct {
 	struct Triangle * tri;
 } RayHit;
 
-Perspective * perspective = NULL;
+Perspective * perspective;
 
 // void getRay(Perspective p, float screenCoord[2], Ray * ray) {
 // 	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
@@ -101,15 +102,15 @@ static inline void progress(int x, int n)
 		if ( x % (n/100 +1) != 0 ) return;
     float r = x/(float)n;
     int c = r * 80;
-    printf("%3d%% [", (int)(r*100) );
+    printf("[%3d%%] ", (int)(r*100) );
 
     for (int x=0; x<c; x++){
-       printf("█");
+       printf("░");
 		}
     for (int x=c; x<80; x++){
        printf(" ");
 		}
-    printf("]\n\033[F\033[J");
+    printf("\n\033[F\033[J");
 }
 
 int main(int argc, char* argv[]){
@@ -139,31 +140,31 @@ int main(int argc, char* argv[]){
   unsigned int x;
   unsigned int y;
 
-	for (x=0; x<height; x++) {
-		for (y=0; y<width; y++) {
+	for (x=0; x<HEIGHT; x++) {
+		for (y=0; y<WIDTH; y++) {
 			//getRay(perspective, float screenCoord[2], Ray * ray);
 			// Calculate and set the color of the pixel.
-			int pos = (x * width + y) * 3;
+			int pos = (x * WIDTH + y) * 3;
       ImageArray[pos]=rand() % 255;//blue channel
 			ImageArray[pos+1]=rand() % 255;//green channel
 			ImageArray[pos+2]=rand() % 255;//red channel
-			progress(pos, arraysize);
-			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, height*width*3);
+			progress(pos, ARRAYSIZE);
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, ARRAYSIZE);
 			// trace(1, buffer, strlen(buffer));
-			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, height*width*3);
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, ARRAYSIZE);
 			// trace(1, buffer, strlen(buffer));
-			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+2, height*width*3);
+			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+2, ARRAYSIZE);
 			// trace(1, buffer, strlen(buffer));
 		}
 	}
 	//finalize the progress bar
-	printf("%3d%% [", 100);
+	printf("[%3d%%] ", 100);
 	for (int x=0; x<80; x++){
 		 printf("█");
 	}
-	printf("]\n");
+	printf("\n");
 
-  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
+  stbi_write_png(filename, WIDTH, HEIGHT, 3, ImageArray, WIDTH*3);
 
   return 1;
 }
