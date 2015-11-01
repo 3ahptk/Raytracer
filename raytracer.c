@@ -15,6 +15,9 @@
 #define debug 1
 #define trace if (debug) write
 
+// Set up the header for all of the methods.
+void getRay(Perspective p, float screenCoord[2], Ray *ray);
+
 char buffer[256];
 unsigned char ImageArray[ARRAYSIZE];
 int colorred[3] = {255,0,0};
@@ -31,14 +34,14 @@ enum material {
 typedef struct {
 	float vector[3];
 	float position[3];
-	int numReflections;//=10;
+	int numReflections; //10
 } Ray;
 
 typedef struct {
-	const	float cameraPos[3];// = {0.0,0.0,0.0};
-	const float distanceToScreen;// = 2;
-	const unsigned int widthWorld;// = 2;
-	const unsigned int widthPixels;// = 512;
+	const	float cameraPos[3]; //{0.0,0.0,0.0}
+	const float distanceToScreen; //2
+	const unsigned int widthWorld; //2
+	const unsigned int widthPixels; //512
 } Perspective;
 
 typedef struct {
@@ -55,26 +58,29 @@ typedef struct {
 	struct Triangle * tri;
 } RayHit;
 
-Perspective * perspective;
+typedef struct {
+  float pos[3];
+  int radius;
+  int mat;
+} Sphere;
 
-// void getRay(Perspective p, float screenCoord[2], Ray * ray) {
-// 	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
-// 	ray->position = (screenCoord, p.distanceToScreen);
-// }
+typedef struct {
+	float pos[3];
+} Triangle;
 
-int RaySphereIntersect(Ray * ray, Sphere * sph){
-  float e[3];
-  float d[3];
-  float c[3];
+void getRay(Perspective p, float screenCoord[2], Ray *ray) {
+	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
+	ray.position = (screenCoord, p.distanceToScreen);
+}
 
-	memcpy(e,ray->vector,sizeof(float[3]));
-	memcpy(d,ray->position,sizeof(float[3]));
-	memcpy(c,sph->pos,sizeof(float[3]));
-
-  float r = sph->radius;
+int RaySphereIntersect(Ray *ray, Sphere *sph){
+  float e[3] = ray.vector;
+  float d[3] = ray.position;
+  float c[3] = sph.pos;
+  float r = sph.radius;
   float eminc = 0;
-  vec3f_sub_new(&eminc,e,c);
-  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(&eminc,&eminc)-(r*r);
+  vec3f_sub_new(eminc,e,c);
+  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(eminc,eminc)-(r*r);
   float t = 0;
   float tpos = 0;
   float tneg = 0;
@@ -96,6 +102,9 @@ int RaySphereIntersect(Ray * ray, Sphere * sph){
   return t;
 }
 
+int RayTriangleIntersect(Ray *ray, Triangle *tri) {
+
+}
 
 static inline void progress(int x, int n)
 {
