@@ -53,10 +53,10 @@ typedef struct {
 
 Perspective * perspective = NULL;
 
-void getRay(Perspective p, float screenCoord[2], Ray * ray) {
-	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
-	ray->position = (screenCoord, p.distanceToScreen);
-}
+// void getRay(Perspective p, float screenCoord[2], Ray * ray) {
+// 	ray->vector = normalize((screenCoord, p.distanceToScreen) - &p.cameraPos);
+// 	ray->position = (screenCoord, p.distanceToScreen);
+// }
 
 int RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];
@@ -94,27 +94,27 @@ int RaySphereIntersect(Ray * ray, Sphere * sph){
 
 
 int main(int argc, char* argv[]){
-  if(argc<2 || argc>3){
+  if(argc!=2){
     sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
   	write(2, buffer, strlen(buffer));
     return -1;
   }
-  char* filename;
+  char * filename;
 
-  if(strcmp( argv[2], "reference" )) {
-    filename = "reference.png";
-  } else if(strcmp( argv[2], "custom")) {
+
+
+  if(strcmp( argv[1], "reference" ) == 0) {
+		filename = "reference.png";
+  } else if(strcmp( argv[1], "custom") == 0) {
     filename = "custom.png";
   } else {
     fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
     return -1;
   }
 
-	Sphere testSphere = {
-			{1,0,1},
-			1,
-			1
-	 };
+	//  Sphere testSphere = {
+	// 		{1,0,1},1,1
+	//  };
 
   unsigned int x;
   unsigned int y;
@@ -123,9 +123,17 @@ int main(int argc, char* argv[]){
 		for (y=0; y<width; y++) {
 			//getRay(perspective, float screenCoord[2], Ray * ray);
 			// Calculate and set the color of the pixel.
-      ImageArray[512*x+3*y]=255;//blue
-			ImageArray[512*x+3*y-1]=255;//green
-			ImageArray[512*x+3*y-2]=255;//red
+			int pos = (x * width + y) * 3;
+      ImageArray[pos]=255;//blue
+			ImageArray[pos+1]=255;//green
+			ImageArray[pos+2]=255;//red
+
+			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, height*width*3);
+			trace(1, buffer, strlen(buffer));
+			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, height*width*3);
+			trace(1, buffer, strlen(buffer));
+			sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+2, height*width*3);
+			trace(1, buffer, strlen(buffer));
 		}
 	}
   sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %u)\n",filename, width, height, 3, width*3);
