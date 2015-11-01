@@ -9,10 +9,13 @@
 #define debug 1
 #define trace if (debug) write
 
+// Set up the header for all of the methods.
+void getRay(Perspective p, float screenCoord[2], Ray *ray);
+
 char buffer[256];
 const unsigned int width = 512;
 const unsigned int height = 512;
-unsigned char ImageArray[height*width*3];
+unsigned char ImageArray[512 * 512 *3];
 
 enum material {
     reflective = 0,
@@ -24,14 +27,14 @@ enum material {
 typedef struct {
 	float vector[3];
 	float position[3];
-	int numReflections = 10;
+	int numReflections; //10
 } Ray;
 
 typedef struct {
-	const	float cameraPos[3] = {0.0,0.0,0.0};
-	const float distanceToScreen = 2;
-	const unsigned int widthWorld = 2;
-	const unsigned int widthPixels = 512;
+	const	float cameraPos[3]; //{0.0,0.0,0.0}
+	const float distanceToScreen; //2
+	const unsigned int widthWorld; //2
+	const unsigned int widthPixels; //512
 } Perspective;
 
 Perspective *perspective = NULL;
@@ -50,51 +53,12 @@ typedef struct {
   int mat;
 } Sphere;
 
-int main(int argc, char* argv[]){
-  if(argc<2 || argc>3){
-    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
-  	write(2, buffer, strlen(buffer));
-    return -1;
-  }
-  char* filename;
+typedef struct {
+	float pos[3];
+	
+} Triangle;
 
-  if(strcmp( argv[2], "reference" )) {
-    filename = "reference.png";
-  } else if(strcmp( argv[2], "custom")) {
-    filename = "custom.png";
-  } else {
-    fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
-    return -1;
-  }
-
-	Sphere testSphere = malloc(sizeof(Sphere));
-	testSphere.pos[0] = 1;//x
-	testSphere.pos[1] = 0;//y
-	testSphere.pos[2] = 1;//z
-	testSphere.radius = 1;
-	testSphere.mat = 1;
-
-  int x;
-  int y;
-
-	for (int x=0; x<height; x++) {
-		for (int y=0; y<width; y++) {
-			getRay();
-			// Calculate and set the color of the pixel.
-      ImageArray[512*x+3*y]=255;//blue
-			ImageArray[512*x+3*y-1]=255;//green
-			ImageArray[512*x+3*y-2]=255;//red
-		}
-	}
-  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, width*3);
-  trace(1, buffer, strlen(buffer));
-
-  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
-
-  return 1;
-}
-
-void getRay(Perspective p, float[2] screenCoord, Ray *ray) { 
+void getRay(Perspective p, float screenCoord[2], Ray *ray) { 
 	ray.vector = normalize((screenCoord, p.distanceToScreen) - p.cameraPos);
 	ray.position = (screenCoord, p.distanceToScreen);
 }
@@ -128,3 +92,52 @@ int RaySphereIntersect(Ray *ray, Sphere *sph){
   return t;
 }
 
+int RayTriangleIntersect(Ray *ray, Triangle *tri) {
+	
+}
+
+int main(int argc, char* argv[]){
+  if(argc<2 || argc>3){
+    sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
+  	write(2, buffer, strlen(buffer));
+    return -1;
+  }
+  char* filename;
+
+  if(strcmp( argv[2], "reference" )) {
+    filename = "reference.png";
+  } else if(strcmp( argv[2], "custom")) {
+    filename = "custom.png";
+  } else {
+    fprintf (stderr, "Invalid output arument: Expected either \"reference\" or \"custom\"; got %s\n", argv[2]);
+    return -1;
+  }
+
+	Sphere testSphere = malloc(sizeof(Sphere));
+	testSphere.pos[0] = 1;//x
+	testSphere.pos[1] = 0;//y
+	testSphere.pos[2] = 1;//z
+	testSphere.radius = 1;
+	testSphere.mat = 1;
+
+	for (int x=0; x<height; x++) {
+		for (int y=0; y<width; y++) {
+			getRay();
+		
+			
+
+			// Calculate and set the color of the pixel.
+      ImageArray[512*x+3*y]=255;//blue
+			ImageArray[512*x+3*y-1]=255;//green
+			ImageArray[512*x+3*y-2]=255;//red
+		}
+	}
+  sprintf(buffer, "stbi_write_png(%s, %d, %d, %d, ImageArray, %lu)\n",filename, width, height, 3, width*3);
+  trace(1, buffer, strlen(buffer));
+
+	
+
+  stbi_write_png(filename, width, height, 3, ImageArray, width*3);
+
+  return 1;
+}
