@@ -454,13 +454,6 @@ static inline void vecNf_scalarDiv_new(float result[], const float v[], const fl
 	vecNf_copy(vOrig, v, n);
 	for(int i=0; i<n; i++)
 		result[i] = v[i]/scalar;
-	if(!isfinite(result[0]))
-	{
-		msg(WARNING, "Divided the following vector by 0:\n");
-		char str[128];
-		vecNf_print_to_string(str, 128, vOrig, n);
-		msg(WARNING, "%s", str);
-	}
 }
 /** Divide each element in a double vector by a scalar.
  * @param result Resulting vector

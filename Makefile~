@@ -2,7 +2,7 @@
 CC = gcc
 EXEC = ray
 CCFLAGS = -Wall -Wextra -std=gnu99
-SRC = raytracer.c
+SRC = raytracer.c vecmat.c msg.c
 OBJS = raytracer.o
 OUT = reference.png custom.png
 

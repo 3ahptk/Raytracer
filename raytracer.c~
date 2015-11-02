@@ -35,10 +35,10 @@ typedef struct {
 } Ray;
 
 typedef struct {
-	const	float cameraPos[3]; //{0.0,0.0,0.0}
-	const float distanceToScreen; //2
-	const unsigned int widthWorld; //2
-	const unsigned int widthPixels; //512
+	const	float cameraPos[3];
+	const float distanceToScreen;
+	const unsigned int widthWorld;
+	const unsigned int widthPixels; 
 } Perspective;
 
 typedef struct {
@@ -56,7 +56,10 @@ typedef struct {
 } Sphere;
 
 typedef struct {
-	float pos[3];
+	float posa[3];
+	float posb[3];
+	float posc[3];
+	int mat;
 } Triangle;
 
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) { 
@@ -64,15 +67,81 @@ void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
 	float srcVec[3];
 	vec3f_sub_new(srcVec, posPixel, p->cameraPos);
 	memcpy(ray->vector, srcVec, sizeof(float[3]));
+	//printf("Ray Vector Before normalization: %f, %f, %f \n", ray->vector[0], ray->vector[1], ray->vector[2]);
 	vec3f_normalize(ray->vector);
+	//printf("Ray Vector After normalization: %f, %f, %f\n", ray->vector[0], ray->vector[1], ray->vector[2]);
 	memcpy(ray->position, posPixel, sizeof(float[3]));
+	//printf("Ray Position: %f, %f, %f\n\n", ray->position[0], ray->position[1], ray->position[2]);
 }
 
-/*
-int RayTriangleIntersect(Ray *ray, Triangle *tri) {
+int RayTriangleIntersect(Ray * ray, Triangle * tri) {
+	float verta[3], vertb[3], vertc[3];
+	float vecray[3], posray[3];
+	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;	
+	float m, beta, gamma, t;
+	float a, b, c, d, e, f, g, h, i, j, k, l;
+	float closestHit = 100;
+	
+	// Copy the three positions from the triangle class into the x, y, z arrays.
+	memcpy(verta, tri->posa, sizeof(float[3]));
+	memcpy(vertb, tri->posb, sizeof(float[3]));
+	memcpy(vertc, tri->posc, sizeof(float[3]));
+	memcpy(vecray, ray->vector, sizeof(float[3]));
+	memcpy(posray, ray->position, sizeof(float[3]));
+	//printf("Vertex A: %f, %f, %f. Vertex B: %f, %f, %f. Vertex C: %f, %f, %f. \n Ray Vector: %f, %f, %f. Ray Position: %f, %f, %f \n",
+	//	verta[0], verta[1], verta[2], vertb[0], vertb[1], vertb[2], vertc[0], vertc[1], vertc[2], vecray[0], vecray[1], vecray[2], 
+	//	posray[0], posray[1], posray[2]);  
+	
+	// Set up the a,b, and c components of the 3 vertices.
+	xa = verta[0];
+	xb = vertb[0];
+	xc = vertc[0];
+	xd = vecray[0];
+	xe = posray[0];
+	ya = verta[1];
+	yb = vertb[1];
+	yc = vertc[1];
+	yd = vecray[1];
+	ye = posray[1];
+	za = verta[2];
+	zb = vertb[2];
+	zc = vertc[2];
+	zd = vecray[2];
+	ze = posray[2];
 
+	// Set up the components.
+	a = xa - xb;
+	b = ya - yb;
+	c = za - zb;
+	d = xa - xc;
+	e = ya - yc;
+	f = za - zc;
+	g = xd;
+	h = yd;
+	i = zd;
+	j = xa - xe;
+	k = ya - ye;
+	l = za - ze;
+
+	// Calculate M, Beta, Gamma, and t.
+	m = (a * ((e * i) - (h * f))) + (b * ((g * f) - (d * i))) + (c * ((d * h) - (e * g)));
+	t = (-(((f * ((a * k) - (j * b))) + (e * ((j * c) - (a * l))) + (d * ((b * l) - (k * c))))) / m);
+
+	if (t > 0) 
+		//printf("Result of t: %f\n", t);
+	
+	// Return the result of the intersection.
+	if (t < 0) 
+		return 0;
+	gamma = (((i * ((a * k) - (j * b))) + (h * ((j * c) - (a * l))) + (g * ((b * l) - (k * c)))) / m);
+	if ((gamma < 0) || (gamma > 1)) 
+		return 0; 
+	beta = ((j * ((e * i) - (h * f)) + (k * ((g * f) - (d * i))) + (l * ((d * h) - (e * g)))) / m);
+	if ((beta < 0) || (beta > (1-gamma)))
+		return 0;
+	printf("Reached");
+	return t;
 }
-*/
 
 int RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];
@@ -150,11 +219,15 @@ int main(int argc, char* argv[]){
 	};
 
 	Ray ray = {
-		{0,0,0}, {0,0,2}, 10
+		{0,0,0},{0,0,2}, 10
 	};
 	
 	Perspective p = {
-		{0.0,0.0,0.0}, 2, 2, 512
+		{0.0,0.0,0.0}, -2, 2, 512
+	};	
+
+	Triangle back1 = {
+		{-8,-2,-20},{8,-2,-20},{8,10,-20}, 1
 	};	
 
   unsigned int x;
@@ -170,9 +243,9 @@ int main(int argc, char* argv[]){
 			// Calculate and set the color of the pixel.
 
 			int pos = (x * WIDTH + y) * 3;
-			int r = RaySphereIntersect(&ray, &testSphere);
+			//int r = RaySphereIntersect(&ray, &testSphere);
+			int r = RayTriangleIntersect(&ray, &back1);
 			if (r == 0) {
-				printf(
 				ImageArray[pos] = 0;//blue channel
 				ImageArray[pos+1] = 0;//green channel
 				ImageArray[pos+2] = 0;//red channel
