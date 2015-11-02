@@ -120,12 +120,12 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   vec3f_sub_new(normal,hitPostion,c);
   vec3f_normalize(normal);
 
-  float lightPos[3] = {-5.0,-3.0,-15.0};
+  float lightPos[3] = {3,5,-15};
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
   float diffuse = vec3f_dot(normal,lightPos);
-  diffuse = MAX(0,-diffuse);
+  diffuse = MAX(0,diffuse);
 
   float outcolor[3];
   memcpy(outcolor,sph->color,sizeof(float[3]));
