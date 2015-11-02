@@ -20,6 +20,8 @@ unsigned char ImageArray[ARRAYSIZE];
 int colorred[3] = {255,0,0};
 int colorgreen[3] = {0,255,0};
 int colorblue[3] = {0,0,255};
+int colorblack[3] = {0,0,0};
+int colorwhite[3] = {255,255,255};
 
 enum material {
     reflective = 0,
@@ -51,7 +53,7 @@ typedef struct {
 
 typedef struct {
   float pos[3];
-  int radius;
+  float radius;
   int mat;
 } Sphere;
 
@@ -59,7 +61,7 @@ typedef struct {
 	float pos[3];
 } Triangle;
 
-void getRay(Perspective * p, float screenCoord[2], Ray * ray) { 
+void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
 	float posPixel[3] = {screenCoord[0], screenCoord[1], p->distanceToScreen};
 	float srcVec[3];
 	vec3f_sub_new(srcVec, posPixel, p->cameraPos);
@@ -74,7 +76,44 @@ int RayTriangleIntersect(Ray *ray, Triangle *tri) {
 }
 */
 
-int RaySphereIntersect(Ray * ray, Sphere * sph){
+int hit = 0;
+int miss = 0;
+
+float RaySphereIntersect(Ray * ray, Sphere * sph){
+// 	// The line passes through p1 and p2:
+// float[3] p1 = ray->position;
+// float[3] p2 = ray->vector;
+//
+// // Sphere center is p3, radius is r:
+// float[3] p3 = sph->pos;
+// float r = sph->radius;
+//
+// float x1 = p1[0]; float y1 = p1[1]; float z1 = p1[2];
+// float x2 = p2[0]; float y2 = p2[1]; float z2 = p2[2];
+// float x3 = p3[0]; float y3 = p3[1]; float z3 = p3[2];
+//
+// float dx = x2 - x1;
+// float dy = y2 - y1;
+// float dz = z2 - z1;
+//
+// float a = dx*dx + dy*dy + dz*dz;
+// float b = 2.0 * (dx * (x1 - x3) + dy * (y1 - y3) + dz * (z1 - z3));
+// float c = x3*x3 + y3*y3 + z3*z3 + x1*x1 + y1*y1 + z1*z1 - 2.0 * (x3*x1 + y3*y1 + z3*z1) - r*r;
+//
+// float test = b*b - 4.0*a*c;
+// float[3] hitp = {0,0,0};
+//
+// 	if (test >= 0.0) {
+// 	  // Hit (according to Treebeard, "a fine hit").
+// 	  float u = (-b - sqrt(test)) / (2.0 * a);
+//
+// 		float eminc[3] = {0,0,0};
+// 		vec3f_sub_new(eminc,e,c);
+//
+// 	  float[3] hitp = p1 + u * (p2 - p1);
+// 	  // Now use hitp.
+// 	}
+// }
   float e[3];
   float d[3];
   float c[3];
@@ -83,27 +122,40 @@ int RaySphereIntersect(Ray * ray, Sphere * sph){
 	memcpy(d,ray->position,sizeof(float[3]));
 	memcpy(c,sph->pos,sizeof(float[3]));
 
-  float r = sph->radius;
-  float eminc = 0;
-  vec3f_sub_new(&eminc,e,c);
-  float discriminant = (vec3f_dot(e,c)*vec3f_dot(e,c))-vec3f_dot(d,d) * vec3f_dot(&eminc,&eminc)-(r*r);
+	// printf("e = {%f,%f,%f}\n",e[0],e[1],e[2]);
+	// printf("d = {%f,%f,%f}\n",d[0],d[1],d[2]);
+  // printf("c = {%f,%f,%f}\n",c[0],c[1],c[2]);
+
+  float r = 1.0;
+  float eminc[3] = {0,0,0};
+  vec3f_sub_new(eminc,e,c);
+	// printf("eminc= {%f,%f,%f}\n",eminc[0],eminc[1],eminc[2]);
+	// printf("vec3f_dot(d,eminc)=%f,vec3f_dot(d,d)=%f,vec3f_dot(&eminc,&eminc)=%f,(r*r)=%f\n",vec3f_dot(d,eminc),vec3f_dot(d,d),vec3f_dot(&eminc,&eminc),(r*r));
+
+	//((d⋅(e−c))^2−(d⋅d)((e−c)⋅(e−c)−R^2))
+	float discriminant = (vec3f_dot(d,eminc)*vec3f_dot(d,eminc)) - vec3f_dot(d,d) *((vec3f_dot(eminc,eminc)-(r*r)));
+	// printf("discriminant:%f\n",discriminant);
+
   float t = 0;
   float tpos = 0;
   float tneg = 0;
 
   if(discriminant>0){//which one do I take?
-    t = (-vec3f_dot(e,c))/ vec3f_dot(d,d);
+    t = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
+		hit++;
   }else if(discriminant==0){
     tpos = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
     tneg = (-vec3f_dot(e,c) - sqrt( discriminant ) )/ vec3f_dot(d,d);
 
     if(tpos<tneg){
       t = tpos;
+			hit++;
     }else{
       t = tneg;
     }
   }else{
     t = 0;
+		miss++;
   }
   return t;
 }
@@ -146,17 +198,18 @@ int main(int argc, char* argv[]){
   }
 
 	Sphere testSphere = {
-		{0,0,3},1,1
+		{0,0,-16},2,1
 	};
 
 	Ray ray = {
-		{0,0,0}, {0,0,2}, 10
+		{0,0,0}, {0,0,2}, 10.0
 	};
-	
+
 	Perspective p = {
 		{0.0,0.0,0.0}, 2, 2, 512
-	};	
+	};
 
+	float r = 0;
   unsigned int x;
   unsigned int y;
 	float screenCoord[2];
@@ -165,14 +218,20 @@ int main(int argc, char* argv[]){
 		for (y=0; y<WIDTH; y++) {
 			screenCoord[0] = x;
 			screenCoord[1] = y;
-			getRay(&p, screenCoord, &ray);			
+			// printf("BEFORE[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
 
+			getRay(&p, screenCoord, &ray);
+
+			// printf("AFTER[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
+
+			//{0,0,0}, {0,0,2}, 10
+			// printf("testSphere = {%f,%f,%f},%f,%f\n",testSphere.pos[0],testSphere.pos[1],testSphere.pos[2],testSphere.radius,testSphere.mat);
 			// Calculate and set the color of the pixel.
 
 			int pos = (x * WIDTH + y) * 3;
-			int r = RaySphereIntersect(&ray, &testSphere);
+			r = RaySphereIntersect(&ray, &testSphere);
+
 			if (r == 0) {
-				printf("loop");
 				ImageArray[pos] = 0;//blue channel
 				ImageArray[pos+1] = 0;//green channel
 				ImageArray[pos+2] = 0;//red channel
@@ -181,9 +240,9 @@ int main(int argc, char* argv[]){
 				ImageArray[pos+1] = 255;//green channel
 				ImageArray[pos+2] = 255;//red channel
 			}
-      
-			progress(pos, ARRAYSIZE);
-			
+
+			// progress(pos, ARRAYSIZE);
+
 			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos, ARRAYSIZE);
 			// trace(1, buffer, strlen(buffer));
 			// sprintf(buffer, "OUT(X=%d, Y=%d, POS=%d, SIZE=%d)\n", x, y, pos+1, ARRAYSIZE);
@@ -193,11 +252,13 @@ int main(int argc, char* argv[]){
 		}
 	}
 	//finalize the progress bar
-	printf("[%3d%%] ", 100);
-	for (int x=0; x<80; x++){
-		 printf("█");
-	}
-	printf("\n");
+	// printf("[%3d%%] ", 100);
+	// for (int x=0; x<80; x++){
+	// 	 printf("█");
+	// }
+	// printf("\n");
+
+	printf("hit:%d,miss:%d\n",hit,miss);
 
   stbi_write_png(filename, WIDTH, HEIGHT, 3, ImageArray, WIDTH*3);
 

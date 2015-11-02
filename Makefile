@@ -4,7 +4,7 @@ EXEC = ray
 CCFLAGS = -Wall -Wextra -std=gnu99
 SRC = raytracer.c
 OBJS = raytracer.o
-OUT = reference.png custom.png
+OUT = reference.png custom.png *~
 
 ${EXEC}: ${OBJS}
 	${CC} ${CCFLAGS} -o ${EXEC} ${OBJS} -lm
@@ -19,3 +19,5 @@ clean:
 	rm -f ${EXEC} ${OBJS} ${OUT}
 
 raytracer.o:raytracer.c
+msg.o: msg.c
+vecmat.o: vecmat.c
