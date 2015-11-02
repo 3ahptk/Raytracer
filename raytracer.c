@@ -57,6 +57,7 @@ typedef struct {
 
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
   float camPos[3] = {0,0,0};
+  memcpy(camPos,p->cameraPos,sizeof(float[3]));
   float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2};
 	float srcVec[3];
 	vec3f_sub_new(srcVec, posPixel, camPos);
@@ -179,7 +180,7 @@ int main(int argc, char* argv[]){
   }
 
 	Sphere sph1 = {
-		{0,0,-16},2,RED,0
+		{0,0,-16},2,BLUE,0
 	};
 
   Sphere sph2 = {
@@ -187,7 +188,7 @@ int main(int argc, char* argv[]){
   };
 
   Sphere sph3 = {
-    {-3,-1,-14},1,BLUE,0//x and y are swaped and -()
+    {-3,-1,-14},1,RED,0//x and y are swaped and -()
   };
 
 	Ray ray = {
