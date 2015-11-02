@@ -46,7 +46,7 @@ typedef struct {
 typedef struct {
   float pos[3];
   float radius;
-  int color[3];
+  float color[3];
   int reflect;
 } Sphere;
 
@@ -67,7 +67,7 @@ void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
 int hit = 0;
 int miss = 0;
 
-RayHit * RaySphereIntersect(Ray * ray, Sphere * sph){
+RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];
   float d[3];
   float c[3];
@@ -119,15 +119,17 @@ RayHit * RaySphereIntersect(Ray * ray, Sphere * sph){
   vec3f_sub_new(normal,hitPostion,c);
   vec3f_normalize(normal);
 
-  float lightPos[3] = {-5,-3,-15};
+  float lightPos[3] = {-5.0,-3.0,-15.0};
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
-  float diffuse = vec3f_dot(normal,lightPos);
+  float diffuse = 1;//vec3f_dot(normal,lightPos);
 
   float outcolor[3];
   memcpy(outcolor,sph->color,sizeof(float[3]));
   vec4f_scalarMult(outcolor, diffuse);
+
+  // printf("sph->color = {%f,%f,%f}\n",sph->color[0],sph->color[1],sph->color[2]);
 
   RayHit rayHit = {0,{0,0,0}};
   if(t!=0){
@@ -135,6 +137,7 @@ RayHit * RaySphereIntersect(Ray * ray, Sphere * sph){
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
     rayHit.color[2] = outcolor[2];
+    printf("rayHit = {%f,%f,%f},%f\n",rayHit.color[0],rayHit.color[1],rayHit.color[2],rayHit.hit);
   }
 
   // printf("e = {%f,%f,%f}\n",e[0],e[1],e[2]);
@@ -195,11 +198,11 @@ int main(int argc, char* argv[]){
 	};
 
   Sphere sph2 = {
-    {1,-3,-14},1,GREEN,0//x and y are swaped and -()
+    {3,-1,-14},1,GREEN,0//x and y are swaped and -()
   };
 
   Sphere sph3 = {
-    {1,3,-14},1,BLUE,0//x and y are swaped and -()
+    {-3,-1,-14},1,BLUE,0//x and y are swaped and -()
   };
 
 	Ray ray = {
@@ -210,19 +213,16 @@ int main(int argc, char* argv[]){
 		{0.0,0.0,0.0}, 2, 2, 512
 	};
 
-	float r1[3];
-  float r2[3];
-  float r3[3];
   unsigned int x;
   unsigned int y;
 	float screenCoord[2];
 
-	for (x=0; x<HEIGHT; x++) {
-		for (y=0; y<WIDTH; y++) {
+	for (x=0; x<WIDTH; x++) {
+		for (y=0; y<HEIGHT; y++) {
   // for (x=255; x<256; x++) {
   //   for (y=255; y<256; y++) {
-			screenCoord[0] = x;
-			screenCoord[1] = y;
+			screenCoord[0] = y;
+			screenCoord[1] = x;
 			// printf("BEFORE[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
 
 			// printf("AFTER[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
@@ -230,33 +230,34 @@ int main(int argc, char* argv[]){
 			//{0,0,0}, {0,0,2}, 10
 			// printf("testSphere = {%f,%f,%f},%f,%f\n",testSphere.pos[0],testSphere.pos[1],testSphere.pos[2],testSphere.radius,testSphere.mat);
 			// Calculate and set the color of the pixel.
-      RayHit * rayHit;
 			int pos = (x * WIDTH + y) * 3;
       getRay(&p, screenCoord, &ray);
-			r1 = RaySphereIntersect(&ray, &sph1);
-      r2 = RaySphereIntersect(&ray, &sph2);
-      r3 = RaySphereIntersect(&ray, &sph3);
+			RayHit r1 = RaySphereIntersect(&ray, &sph1);
+      RayHit r2 = RaySphereIntersect(&ray, &sph2);
+      RayHit r3 = RaySphereIntersect(&ray, &sph3);
 
-      if (r1 == 0) {
+      // printf("r1 = {%f,%f,%f},%f\n",r1.color[0],r1.color[1],r1.color[2],r1.hit);
+
+      if (r1.hit != 0) {
+				ImageArray[pos] = r1.color[0];//blue channel
+				ImageArray[pos+1] = r1.color[1];//green channel
+				ImageArray[pos+2] = r1.color[2];//red channel
+			} else {
 				ImageArray[pos] = 0;//blue channel
 				ImageArray[pos+1] = 0;//green channel
 				ImageArray[pos+2] = 0;//red channel
-			} else {
-				ImageArray[pos] = 255;//blue channel
-				ImageArray[pos+1] = 255;//green channel
-				ImageArray[pos+2] = 255;//red channel
 			}
 
-      if (r2 != 0) {
-				ImageArray[pos] = 255;//blue channel
-				ImageArray[pos+1] = 255;//green channel
-				ImageArray[pos+2] = 255;//red channel
+      if (r2.hit != 0) {
+				ImageArray[pos] = r2.color[0];//blue channel
+				ImageArray[pos+1] = r2.color[1];//green channel
+				ImageArray[pos+2] = r2.color[2];//red channel
 			}
 
-			if (r3 != 0) {
-				ImageArray[pos] = 255;//blue channel
-				ImageArray[pos+1] = 255;//green channel
-				ImageArray[pos+2] = 255;//red channel
+			if (r3.hit != 0) {
+				ImageArray[pos] = r3.color[0];//blue channel
+				ImageArray[pos+1] = r3.color[1];//green channel
+				ImageArray[pos+2] = r3.color[2];//red channel
 			}
 
 			// progress(pos, ARRAYSIZE);
