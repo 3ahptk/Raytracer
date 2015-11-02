@@ -12,23 +12,18 @@
 #define HEIGHT 512
 #define ARRAYSIZE WIDTH*HEIGHT*3
 
+#define RED   {255,0,0}
+#define GREEN {0,255,0}
+#define BLUE  {0,0,255}
+#define BLACK {0,0,0}
+#define WHITE {255,255,255}
+
 #define debug 1
 #define trace if (debug) write
 
 char buffer[256];
 unsigned char ImageArray[ARRAYSIZE];
-int colorred[3] = {255,0,0};
-int colorgreen[3] = {0,255,0};
-int colorblue[3] = {0,0,255};
-int colorblack[3] = {0,0,0};
-int colorwhite[3] = {255,255,255};
-
-enum material {
-    reflective = 0,
-		red = 1,
-    green = 2,
-    blue = 3
-};
+float pixellength = 2.0/512.0;
 
 typedef struct {
 	float vector[3];
@@ -44,17 +39,15 @@ typedef struct {
 } Perspective;
 
 typedef struct {
-	float t;
-	Ray ray;
-	int objectCode;
-	struct Sphere * sph;
-	struct Triangle * tri;
+	float hit;
+  float color[3];
 } RayHit;
 
 typedef struct {
   float pos[3];
   float radius;
-  int mat;
+  int color[3];
+  int reflect;
 } Sphere;
 
 typedef struct {
@@ -62,71 +55,32 @@ typedef struct {
 } Triangle;
 
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
-	float posPixel[3] = {screenCoord[0], screenCoord[1], p->distanceToScreen};
+  float camPos[3] = {0,0,0};
+  float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2};
 	float srcVec[3];
-	vec3f_sub_new(srcVec, posPixel, p->cameraPos);
+	vec3f_sub_new(srcVec, posPixel, camPos);
 	memcpy(ray->vector, srcVec, sizeof(float[3]));
 	vec3f_normalize(ray->vector);
-	memcpy(ray->position, posPixel, sizeof(float[3]));
+	memcpy(ray->position, camPos, sizeof(float[3]));
 }
-
-/*
-int RayTriangleIntersect(Ray *ray, Triangle *tri) {
-
-}
-*/
 
 int hit = 0;
 int miss = 0;
 
-float RaySphereIntersect(Ray * ray, Sphere * sph){
-// 	// The line passes through p1 and p2:
-// float[3] p1 = ray->position;
-// float[3] p2 = ray->vector;
-//
-// // Sphere center is p3, radius is r:
-// float[3] p3 = sph->pos;
-// float r = sph->radius;
-//
-// float x1 = p1[0]; float y1 = p1[1]; float z1 = p1[2];
-// float x2 = p2[0]; float y2 = p2[1]; float z2 = p2[2];
-// float x3 = p3[0]; float y3 = p3[1]; float z3 = p3[2];
-//
-// float dx = x2 - x1;
-// float dy = y2 - y1;
-// float dz = z2 - z1;
-//
-// float a = dx*dx + dy*dy + dz*dz;
-// float b = 2.0 * (dx * (x1 - x3) + dy * (y1 - y3) + dz * (z1 - z3));
-// float c = x3*x3 + y3*y3 + z3*z3 + x1*x1 + y1*y1 + z1*z1 - 2.0 * (x3*x1 + y3*y1 + z3*z1) - r*r;
-//
-// float test = b*b - 4.0*a*c;
-// float[3] hitp = {0,0,0};
-//
-// 	if (test >= 0.0) {
-// 	  // Hit (according to Treebeard, "a fine hit").
-// 	  float u = (-b - sqrt(test)) / (2.0 * a);
-//
-// 		float eminc[3] = {0,0,0};
-// 		vec3f_sub_new(eminc,e,c);
-//
-// 	  float[3] hitp = p1 + u * (p2 - p1);
-// 	  // Now use hitp.
-// 	}
-// }
+RayHit * RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];
   float d[3];
   float c[3];
 
-	memcpy(e,ray->vector,sizeof(float[3]));
-	memcpy(d,ray->position,sizeof(float[3]));
+	memcpy(e,ray->position,sizeof(float[3]));
+	memcpy(d,ray->vector,sizeof(float[3]));
 	memcpy(c,sph->pos,sizeof(float[3]));
 
 	// printf("e = {%f,%f,%f}\n",e[0],e[1],e[2]);
 	// printf("d = {%f,%f,%f}\n",d[0],d[1],d[2]);
   // printf("c = {%f,%f,%f}\n",c[0],c[1],c[2]);
 
-  float r = 1.0;
+  float r = sph->radius;
   float eminc[3] = {0,0,0};
   vec3f_sub_new(eminc,e,c);
 	// printf("eminc= {%f,%f,%f}\n",eminc[0],eminc[1],eminc[2]);
@@ -140,16 +94,15 @@ float RaySphereIntersect(Ray * ray, Sphere * sph){
   float tpos = 0;
   float tneg = 0;
 
-  if(discriminant>0){//which one do I take?
-    t = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
+  if(discriminant==0){//which one do I take?
+    t = (- vec3f_dot(d,eminc) + sqrt( discriminant ) )/ vec3f_dot(d,d);
 		hit++;
-  }else if(discriminant==0){
-    tpos = (-vec3f_dot(e,c) + sqrt( discriminant ) )/ vec3f_dot(d,d);
-    tneg = (-vec3f_dot(e,c) - sqrt( discriminant ) )/ vec3f_dot(d,d);
-
+  }else if(discriminant>0){
+    tpos = (-vec3f_dot(d,eminc) + sqrt( discriminant ) )/ vec3f_dot(d,d);
+    tneg = (-vec3f_dot(d,eminc) - sqrt( discriminant ) )/ vec3f_dot(d,d);
+		hit++;
     if(tpos<tneg){
       t = tpos;
-			hit++;
     }else{
       t = tneg;
     }
@@ -157,7 +110,47 @@ float RaySphereIntersect(Ray * ray, Sphere * sph){
     t = 0;
 		miss++;
   }
-  return t;
+
+  float hitPostion[3] = {0,0,0};
+  vec4f_scalarMult(d, t);
+  vec3f_add_new(hitPostion, e, d);
+
+  float normal[3] = {0,0,0};
+  vec3f_sub_new(normal,hitPostion,c);
+  vec3f_normalize(normal);
+
+  float lightPos[3] = {-5,-3,-15};
+  vec3f_sub_new(lightPos,lightPos,hitPostion);
+  vec3f_normalize(lightPos);
+
+  float diffuse = vec3f_dot(normal,lightPos);
+
+  float outcolor[3];
+  memcpy(outcolor,sph->color,sizeof(float[3]));
+  vec4f_scalarMult(outcolor, diffuse);
+
+  RayHit rayHit = {0,{0,0,0}};
+  if(t!=0){
+    rayHit.hit = 1;
+    rayHit.color[0] = outcolor[0];
+    rayHit.color[1] = outcolor[1];
+    rayHit.color[2] = outcolor[2];
+  }
+
+  // printf("e = {%f,%f,%f}\n",e[0],e[1],e[2]);
+  // printf("d = {%f,%f,%f}\n",d[0],d[1],d[2]);
+  // printf("t=%f\n",t);
+
+  // if(t>0){
+  //     printf("p(t) = e + t*d:{%f,%f,%f}\n", hitPostion[0], hitPostion[1], hitPostion[2]);
+  // }
+
+  //normal vector = normalize(hit pos - center pos of sphere)
+  //difuse shading = dot(normalize(normal vector) • normalize(light pos - hit pos))
+
+  //when reflection hit add a small number + direction the ray would go
+
+  return rayHit;
 }
 
 
@@ -197,45 +190,70 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
-	Sphere testSphere = {
-		{0,0,-16},2,1
+	Sphere sph1 = {
+		{0,0,-16},2,RED,0
 	};
 
+  Sphere sph2 = {
+    {1,-3,-14},1,GREEN,0//x and y are swaped and -()
+  };
+
+  Sphere sph3 = {
+    {1,3,-14},1,BLUE,0//x and y are swaped and -()
+  };
+
 	Ray ray = {
-		{0,0,0}, {0,0,2}, 10.0
+		{0,0,0}, {0,0,-2}, 10.0
 	};
 
 	Perspective p = {
 		{0.0,0.0,0.0}, 2, 2, 512
 	};
 
-	float r = 0;
+	float r1[3];
+  float r2[3];
+  float r3[3];
   unsigned int x;
   unsigned int y;
 	float screenCoord[2];
 
 	for (x=0; x<HEIGHT; x++) {
 		for (y=0; y<WIDTH; y++) {
+  // for (x=255; x<256; x++) {
+  //   for (y=255; y<256; y++) {
 			screenCoord[0] = x;
 			screenCoord[1] = y;
 			// printf("BEFORE[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
-
-			getRay(&p, screenCoord, &ray);
 
 			// printf("AFTER[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
 
 			//{0,0,0}, {0,0,2}, 10
 			// printf("testSphere = {%f,%f,%f},%f,%f\n",testSphere.pos[0],testSphere.pos[1],testSphere.pos[2],testSphere.radius,testSphere.mat);
 			// Calculate and set the color of the pixel.
-
+      RayHit * rayHit;
 			int pos = (x * WIDTH + y) * 3;
-			r = RaySphereIntersect(&ray, &testSphere);
+      getRay(&p, screenCoord, &ray);
+			r1 = RaySphereIntersect(&ray, &sph1);
+      r2 = RaySphereIntersect(&ray, &sph2);
+      r3 = RaySphereIntersect(&ray, &sph3);
 
-			if (r == 0) {
+      if (r1 == 0) {
 				ImageArray[pos] = 0;//blue channel
 				ImageArray[pos+1] = 0;//green channel
 				ImageArray[pos+2] = 0;//red channel
 			} else {
+				ImageArray[pos] = 255;//blue channel
+				ImageArray[pos+1] = 255;//green channel
+				ImageArray[pos+2] = 255;//red channel
+			}
+
+      if (r2 != 0) {
+				ImageArray[pos] = 255;//blue channel
+				ImageArray[pos+1] = 255;//green channel
+				ImageArray[pos+2] = 255;//red channel
+			}
+
+			if (r3 != 0) {
 				ImageArray[pos] = 255;//blue channel
 				ImageArray[pos+1] = 255;//green channel
 				ImageArray[pos+2] = 255;//red channel
