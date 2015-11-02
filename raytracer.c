@@ -20,6 +20,7 @@
 
 #define debug 1
 #define trace if (debug) write
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 char buffer[256];
 unsigned char ImageArray[ARRAYSIZE];
@@ -60,6 +61,7 @@ typedef struct {
 
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
   float camPos[3] = {0,0,0};
+  memcpy(camPos,p->cameraPos,sizeof(float[3]));
   float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2};
 	float srcVec[3];
 	vec3f_sub_new(srcVec, posPixel, camPos);
@@ -227,11 +229,12 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   vec3f_sub_new(normal,hitPostion,c);
   vec3f_normalize(normal);
 
-  float lightPos[3] = {-5.0,-3.0,-15.0};
+  float lightPos[3] = {3,5,-15};
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
-  float diffuse = 1;//vec3f_dot(normal,lightPos);
+  float diffuse = vec3f_dot(normal,lightPos);
+  diffuse = MAX(0,diffuse);
 
   float outcolor[3];
   memcpy(outcolor,sph->color,sizeof(float[3]));
@@ -245,7 +248,7 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
     rayHit.color[2] = outcolor[2];
-    //printf("rayHit = {%f,%f,%f},%f\n",rayHit.color[0],rayHit.color[1],rayHit.color[2],rayHit.hit);
+    // printf("rayHit = {%f,%f,%f},%f\n",rayHit.color[0],rayHit.color[1],rayHit.color[2],rayHit.hit);
   }
 
   // printf("e = {%f,%f,%f}\n",e[0],e[1],e[2]);
@@ -262,23 +265,6 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   //when reflection hit add a small number + direction the ray would go
 
   return rayHit;
-}
-
-
-static inline void progress(int x, int n)
-{
-		if ( x % (n/100 +1) != 0 ) return;
-    float r = x/(float)n;
-    int c = r * 80;
-    printf("[%3d%%] ", (int)(r*100) );
-
-    for (int x=0; x<c; x++){
-       printf("░");
-		}
-    for (int x=c; x<80; x++){
-       printf(" ");
-		}
-    printf("\n\033[F\033[J");
 }
 
 int main(int argc, char* argv[]){
@@ -302,7 +288,7 @@ int main(int argc, char* argv[]){
   }
 
 	Sphere sph1 = {
-		{0,0,-16},2,RED,0
+		{0,0,-16},2,BLUE,0
 	};
 
   Sphere sph2 = {
@@ -310,7 +296,7 @@ int main(int argc, char* argv[]){
   };
 
   Sphere sph3 = {
-    {-3,-1,-14},1,BLUE,0//x and y are swaped and -()
+    {-3,-1,-14},1,RED,0//x and y are swaped and -()
   };
 
 	Ray ray = {
@@ -432,12 +418,6 @@ int main(int argc, char* argv[]){
 			// trace(1, buffer, strlen(buffer));
 		}
 	}
-	//finalize the progress bar
-	// printf("[%3d%%] ", 100);
-	// for (int x=0; x<80; x++){
-	// 	 printf("█");
-	// }
-	// printf("\n");
 
 	printf("hit:%d,miss:%d\n",hit,miss);
 
