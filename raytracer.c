@@ -1,3 +1,17 @@
+/** @file This program demonstrates the process of Ray-Tracing.
+ *				It shoots out a series of rays for each of the pixels
+ *				in order to calculate the intersection of the objects,
+ *				either a triangle or a sphere. It then calculates the
+ *				color of the objects based on the ray hit result. The
+ *				ray hit result tells the color of the object to be drawn.
+ *				This program demonstrates two different scenes done with
+ * 				ray-tracing: reference and custom.
+ *
+ * @author Charles Kralapp
+ * @author Nik Koshcheyev
+ */
+
+// Import helper classes to use vec3f functions.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include "vecmat.h"
@@ -8,10 +22,12 @@
 #include <string.h>
 #include <unistd.h>
 
+// Set up the width, height, and arraysize for the image.
 #define WIDTH 512
 #define HEIGHT 512
 #define ARRAYSIZE WIDTH*HEIGHT*3
 
+// Set up the RGB values for each of the colors used in this program.
 #define RED   {255,0,0}
 #define GREEN {0,255,0}
 #define BLUE  {0,0,255}
@@ -26,13 +42,17 @@ char buffer[256];
 unsigned char ImageArray[ARRAYSIZE];
 float pixellength = 2.0/512.0;
 char * filename;
+int hit = 0;
+int miss = 0;
 
+// Create the Ray struct that will calculate the rays being shot.
 typedef struct {
 	float vector[3];
 	float position[3];
 	int numReflections; //10
 } Ray;
 
+// Set up the perspective of the camera.
 typedef struct {
 	const	float cameraPos[3];
 	const float distanceToScreen;
@@ -40,11 +60,7 @@ typedef struct {
 	const unsigned int widthPixels;
 } Perspective;
 
-typedef struct {
-	float hit;
-  float color[3];
-} RayHit;
-
+// This is the sphere struct.
 typedef struct {
   float pos[3];
   float radius;
@@ -52,6 +68,7 @@ typedef struct {
   int reflect;
 } Sphere;
 
+// This is the triangle struct.
 typedef struct {
 	float posa[3];
 	float posb[3];
@@ -60,29 +77,41 @@ typedef struct {
 	int reflect;
 } Triangle;
 
-/*
- *
- */
+// This is the struct that represent the pixel hit by a ray.
+typedef struct {
+	int hittype;
+	Sphere sph;
+	Triangle tri;
+	float normal[3];
+	float lightpos[3];
+	float hit;
+  float color[3];
+} RayHit;
+
+/* This is called every time you shoot out a ray at each of the pixels
+	 in the imageArray. This calculates the ray attributes that will be
+	 used to calculate the color of the scene objects. */
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
   float camPos[3] = {0,0,0};
-  memcpy(camPos,p->cameraPos,sizeof(float[3]));
-  float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2};
+  memcpy(camPos,p->cameraPos,sizeof(float[3]));		// Set up the position of the camera.
+  float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2}; // Map the location of pixel on screen
 	float srcVec[3];
-	vec3f_sub_new(srcVec, posPixel, camPos);
+	vec3f_sub_new(srcVec, posPixel, camPos);	// Subtract the cameraPosition from the pixel position.
 	memcpy(ray->vector, srcVec, sizeof(float[3]));
-	vec3f_normalize(ray->vector);
+	vec3f_normalize(ray->vector);	// Normalize the ray vector.
 	memcpy(ray->position, camPos, sizeof(float[3]));
 }
 
-int hit = 0;
-int miss = 0;
-
+/* This is called every time you shoot out a ray at each of the pixels
+	 in the imageArray. This calculates the ray attributes that will be
+	 used to calculate the color of the scene objects. */
 RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
+	// The three triangle vertices.
 	float verta[3], vertb[3], vertc[3];
 	float vecray[3], posray[3];
-	float n[3] = {0.0, 0.0, 0.0};
-	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;
-	float m, beta, gamma, t;
+	float n[3] = {0.0, 0.0, 0.0};	// Normal vector
+	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;	// The components to determine t.
+	float m, beta, gamma, t;	// Components to determine the Barycentric coordinates.
 	float a, b, c, d, e, f, g, h, i, j, k, l;
 
 	// Copy the three positions from the triangle class into the x, y, z arrays.
@@ -143,6 +172,7 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 		t = 0;
 	}
 
+	// Calculate the normal of the triangle
 	float u[3] = {0,0,0};
 	float v[3] = {0,0,0};
 	vec3f_sub_new(u, vertb, verta);
@@ -150,14 +180,17 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	vec3f_cross_new(n, v, u);
 	hit++;
 
+	// Determine the position that the vector hits the object.
 	float hitPostion[3] = {0,0,0};
   vec3f_scalarMult(vecray, t);
   vec3f_add_new(hitPostion, posray, vecray);
 
+	// Set up the normal of the triangle in regards to the hit position.
   float normal[3] = {0,0,0};
   vec3f_sub_new(normal, hitPostion, n);
   vec3f_normalize(normal);
 
+  // Set up the light position based on the user selected scene.
   float lightPos[3] = {0,0,0};
 	if (strcmp(filename, "reference.png" ) == 0) {
   	float refLightPos[3] = {3.0, 5.0,-15.0};
@@ -169,15 +202,26 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
+	// Calculate the diffuse shading.
   float diffuse = vec3f_dot(normal,lightPos);
   diffuse = MAX(0,diffuse);
-
   float outcolor[3];
   memcpy(outcolor,tri->color,sizeof(float[3]));
   vec3f_scalarMult(outcolor, diffuse);
 
-  RayHit rayHit = {0,{0,0,0}};
+	// Set up the rayHit object to return.
+  RayHit rayHit = {0,{{0,0,0},0,BLACK,0},{{0,0,0},{0,0,0},{0,0,0}, BLACK, 0},{0,0,0},{0,0,0},0,{0,0,0}};
   if(t != 0){
+		rayHit.hittype=1;//zero for spheres, one for triangles
+		memcpy(&rayHit.tri,tri,sizeof(Triangle));
+
+		rayHit.normal[0] = normal[0];
+    rayHit.normal[1] = normal[1];
+    rayHit.normal[2] = normal[2];
+		rayHit.lightpos[0] = lightPos[0];
+		rayHit.lightpos[1] = lightPos[1];
+		rayHit.lightpos[2] = lightPos[2];
+
     rayHit.hit = 1;
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
@@ -258,8 +302,18 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   memcpy(outcolor,sph->color,sizeof(float[3]));
   vec3f_scalarMult(outcolor, diffuse);
 
-  RayHit rayHit = {0,{0,0,0}};
+  RayHit rayHit = {0,{{0,0,0},0,BLACK,0},{{0,0,0},{0,0,0},{0,0,0}, BLACK, 0},{0,0,0},{0,0,0},0,{0,0,0}};
   if(t!=0){
+		rayHit.hittype=0;//zero for spheres, one for triangles
+		memcpy(&rayHit.sph,sph,sizeof(Sphere));
+
+		rayHit.normal[0] = normal[0];
+    rayHit.normal[1] = normal[1];
+    rayHit.normal[2] = normal[2];
+		rayHit.lightpos[0] = lightPos[0];
+		rayHit.lightpos[1] = lightPos[1];
+		rayHit.lightpos[2] = lightPos[2];
+
     rayHit.hit = 1;
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
@@ -279,6 +333,17 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
 //  RayTriangleIntersect(Ray * ray, Triangle * tri)
 //  getRay(Perspective * p, float screenCoord[2], Ray * ray)
 //-----------------------------------------------------------
+
+static inline void progress(int x, int n){
+		if ( x % (n/10 +1) != 0 ) return;
+    float r = x/(float)n;
+    int c = r * 80;
+    printf("█ %3d%% ", (int)(r*100) );
+    for (int x=0; x<c; x++){printf("█");}
+    for (int x=c; x<80; x++){printf("░");}
+    printf("\n\033[F\033[J");
+}
+
 int main(int argc, char* argv[]){
   if(argc!=2){//check for arguments
     sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
@@ -410,6 +475,7 @@ int main(int argc, char* argv[]){
 					ImageArray[pos+1] = r3.color[1];//green channel
 					ImageArray[pos+2] = r3.color[2];//red channel
 				}
+				progress(pos, ARRAYSIZE);
 			}
 		}
 	} else {//we are in the custom scene
@@ -527,9 +593,16 @@ int main(int argc, char* argv[]){
 					ImageArray[pos+1] = s.color[1];//green channel
 					ImageArray[pos+2] = s.color[2];//red channel
 				}
+				progress(pos, ARRAYSIZE);
 			}
 		}
 	}
+
+  //////finalize the progress bar///////
+  printf("█ %3d%% ", 100);
+  for (int x=0; x<80; x++){printf("█");}
+  printf("\n");
+  //////////////////////////////////////
 
   stbi_write_png(filename, WIDTH, HEIGHT, 3, ImageArray, WIDTH*3);//write the array of pixels to the image
 
