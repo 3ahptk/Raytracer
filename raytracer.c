@@ -185,9 +185,9 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 }
 
 RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
-  float e[3];
-  float d[3];
-  float c[3];
+  float e[3];//e = starting position of ray
+  float d[3];//d = vector representing ray
+  float c[3];//c=(xc, yc, zc) ; Center of sphere
 
 	memcpy(e,ray->position,sizeof(float[3]));
 	memcpy(d,ray->vector,sizeof(float[3]));
@@ -199,14 +199,14 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
 
 	float discriminant = (vec3f_dot(d,eminc)*vec3f_dot(d,eminc)) - vec3f_dot(d,d) *((vec3f_dot(eminc,eminc)-(r*r)));
 
-  float t = 0;
-  float tpos = 0;
-  float tneg = 0;
+  float t = 0;//t = “time”/distance
+  float tpos = 0;//find the time for the 2 intersection path
+  float tneg = 0;//find the time for the 2 intersection path
 
-  if(discriminant==0){//which one do I take?
+  if(discriminant==0){//1 solution
     t = (-vec3f_dot(d,eminc) + sqrt( discriminant ) )/ vec3f_dot(d,d);
 		hit++;
-  }else if(discriminant>0){
+  }else if(discriminant>0){//2 solutions
     tpos = (-vec3f_dot(d,eminc) + sqrt( discriminant ) )/ vec3f_dot(d,d);
     tneg = (-vec3f_dot(d,eminc) - sqrt( discriminant ) )/ vec3f_dot(d,d);
 		hit++;
@@ -215,20 +215,20 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
     }else{
       t = tneg;
     }
-  }else{
+  }else{//didnt hit
     t = 0;
 		miss++;
   }
 
-  float hitPostion[3] = {0,0,0};
+  float hitPostion[3] = {0,0,0};//calculate where the ray hit
   vec3f_scalarMult(d, t);
   vec3f_add_new(hitPostion, e, d);
 
-  float normal[3] = {0,0,0};
+  float normal[3] = {0,0,0};//calculate the normal vector of the hit position
   vec3f_sub_new(normal,hitPostion,c);
   vec3f_normalize(normal);
 
-	float lightPos[3] = {0,0,0};
+	float lightPos[3] = {0,0,0};//calculate where the light is
 	if (strcmp(filename, "reference.png" ) == 0) {
   	float refLightPos[3] = {3.0, 5.0,-15.0};
   	memcpy(lightPos,refLightPos,sizeof(float[3]));
@@ -239,10 +239,10 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
-  float diffuse = vec3f_dot(normal,lightPos);
+  float diffuse = vec3f_dot(normal,lightPos);//calculate diffuse shading
   diffuse = MAX(0,diffuse)/2+.2;
 
-  float outcolor[3];
+  float outcolor[3];//calculate the color
   memcpy(outcolor,sph->color,sizeof(float[3]));
   vec3f_scalarMult(outcolor, diffuse);
 
@@ -257,7 +257,7 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
 }
 
 int main(int argc, char* argv[]){
-  if(argc!=2){
+  if(argc!=2){//check for arguments
     sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
   	write(2, buffer, strlen(buffer));
     return -1;
@@ -283,17 +283,17 @@ int main(int argc, char* argv[]){
 		{0.0,0.0,0.0}, 2, 2, 512
 	};
 
-	if (strcmp(filename, "reference.png") == 0) {
+	if (strcmp(filename, "reference.png") == 0) {//setup for the reference scene
 		Sphere sph1 = {
 			{0,0,-16},2,BLUE,0
 		};
 
 		Sphere sph2 = {
-		  {3,-1,-14},1,GREEN,0//x and y are swaped and -()
+		  {3,-1,-14},1,GREEN,0
 		};
 
 		Sphere sph3 = {
-		  {-3,-1,-14},1,RED,0//x and y are swaped and -()
+		  {-3,-1,-14},1,RED,0
 		};
 
 		Triangle back1 = {
@@ -320,21 +320,21 @@ int main(int argc, char* argv[]){
 		unsigned int y;
 		float screenCoord[2];
 
-		for (x=0; x<WIDTH; x++) {
-			for (y=0; y<HEIGHT; y++) {
+		for (x=0; x<WIDTH; x++) {//interate through each pixel on the screen
+			for (y=0; y<HEIGHT; y++) {//interate through each pixel on the screen
 				screenCoord[0] = y;
 				screenCoord[1] = x;
 
-				int pos = (x * WIDTH + y) * 3;
+				int pos = (x * WIDTH + y) * 3;//map from a 2d array to a 1d array
 		    getRay(&p, screenCoord, &ray);
-				RayHit r1 = RaySphereIntersect(&ray, &sph1);
-		    RayHit r2 = RaySphereIntersect(&ray, &sph2);
-		    RayHit r3 = RaySphereIntersect(&ray, &sph3);
-				RayHit b1 = RayTriangleIntersect(&ray, &back1);
-				RayHit b2 = RayTriangleIntersect(&ray, &back2);
-				RayHit f1 = RayTriangleIntersect(&ray, &bot1);
-				RayHit f2 = RayTriangleIntersect(&ray, &bot2);
-				RayHit rt = RayTriangleIntersect(&ray, &right);
+				RayHit r1 = RaySphereIntersect(&ray, &sph1);    // get the intersection between the ray and each object in the scene
+		    RayHit r2 = RaySphereIntersect(&ray, &sph2);    // get the intersection between the ray and each object in the scene
+		    RayHit r3 = RaySphereIntersect(&ray, &sph3);    // get the intersection between the ray and each object in the scene
+				RayHit b1 = RayTriangleIntersect(&ray, &back1); // get the intersection between the ray and each object in the scene
+				RayHit b2 = RayTriangleIntersect(&ray, &back2); // get the intersection between the ray and each object in the scene
+				RayHit f1 = RayTriangleIntersect(&ray, &bot1);  // get the intersection between the ray and each object in the scene
+				RayHit f2 = RayTriangleIntersect(&ray, &bot2);  // get the intersection between the ray and each object in the scene
+				RayHit rt = RayTriangleIntersect(&ray, &right); // get the intersection between the ray and each object in the scene
 
 				if (b1.hit != 0) {
 					ImageArray[pos] = b1.color[0];//blue channel
@@ -387,11 +387,9 @@ int main(int argc, char* argv[]){
 					ImageArray[pos+1] = r3.color[1];//green channel
 					ImageArray[pos+2] = r3.color[2];//red channel
 				}
-
-				// progress(pos, ARRAYSIZE);
 			}
 		}
-	} else {
+	} else {//we are in the custom scene
 		Triangle back1 = {
 			{-7,-7,-20},{7,-7,-20},{7,7,-20}, BLUE, 0
 		};
@@ -432,22 +430,22 @@ int main(int argc, char* argv[]){
 		unsigned int y;
 		float screenCoord[2];
 
-		for (x=0; x<WIDTH; x++) {
-			for (y=0; y<HEIGHT; y++) {
+		for (x=0; x<WIDTH; x++) {//iterate through each pixel on the screen
+			for (y=0; y<HEIGHT; y++) {//iterate through each pixel on the screen
 				screenCoord[0] = y;
 				screenCoord[1] = x;
 
-				int pos = (x * WIDTH + y) * 3;
+				int pos = (x * WIDTH + y) * 3;//map the 2d array to a 1d array
 		    getRay(&p, screenCoord, &ray);
-				RayHit b1 = RayTriangleIntersect(&ray, &back1);
-				RayHit b2 = RayTriangleIntersect(&ray, &back2);
-				RayHit f1 = RayTriangleIntersect(&ray, &bot1);
-				RayHit f2 = RayTriangleIntersect(&ray, &bot2);
-				RayHit r1 = RayTriangleIntersect(&ray, &right1);
-				RayHit r2 = RayTriangleIntersect(&ray, &right2);
-				RayHit l1 = RayTriangleIntersect(&ray, &left1);
-				RayHit l2 = RayTriangleIntersect(&ray, &left2);
-				RayHit s = RaySphereIntersect(&ray, &sph1);
+				RayHit b1 = RayTriangleIntersect(&ray, &back1); //get the intersection between the ray and each object in the scene
+				RayHit b2 = RayTriangleIntersect(&ray, &back2); //get the intersection between the ray and each object in the scene
+				RayHit f1 = RayTriangleIntersect(&ray, &bot1);  //get the intersection between the ray and each object in the scene
+				RayHit f2 = RayTriangleIntersect(&ray, &bot2);  //get the intersection between the ray and each object in the scene
+				RayHit r1 = RayTriangleIntersect(&ray, &right1);//get the intersection between the ray and each object in the scene
+				RayHit r2 = RayTriangleIntersect(&ray, &right2);//get the intersection between the ray and each object in the scene
+				RayHit l1 = RayTriangleIntersect(&ray, &left1); //get the intersection between the ray and each object in the scene
+				RayHit l2 = RayTriangleIntersect(&ray, &left2); //get the intersection between the ray and each object in the scene
+				RayHit s = RaySphereIntersect(&ray, &sph1);     //get the intersection between the ray and each object in the scene
 
 				if (b1.hit != 0) {
 					ImageArray[pos] = b1.color[0];//blue channel
@@ -510,9 +508,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	printf("hit:%d,miss:%d\n",hit,miss);
-
-  stbi_write_png(filename, WIDTH, HEIGHT, 3, ImageArray, WIDTH*3);
+  stbi_write_png(filename, WIDTH, HEIGHT, 3, ImageArray, WIDTH*3);//write the array of pixels to the image
 
   return 1;
 }
