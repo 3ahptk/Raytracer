@@ -60,6 +60,9 @@ typedef struct {
 	int reflect;
 } Triangle;
 
+/*
+ *
+ */
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
   float camPos[3] = {0,0,0};
   memcpy(camPos,p->cameraPos,sizeof(float[3]));
@@ -184,6 +187,15 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
   return rayHit;
 }
 
+//-----------------------------------------------------------
+// FUNCTION RaySphereIntersect:
+//	find if a ray intersects with the given sphere
+// PARAMETER USAGE :
+//	Ray * ray: the ray shot from the camera or reflection
+//  Sphere * sph:the sphere to check if interesction occurs
+// FUNCTION CALLED :
+//  vecmath.c vector functions
+//-----------------------------------------------------------
 RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   float e[3];//e = starting position of ray
   float d[3];//d = vector representing ray
@@ -256,6 +268,17 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
   return rayHit;
 }
 
+//-----------------------------------------------------------
+// FUNCTION main:
+//	serves to get the correct image output and find correct output
+// PARAMETER USAGE :
+// int argc: number of input arguments
+// char* argv[]: the input arguments
+// FUNCTION CALLED :
+//	RaySphereIntersect(Ray * ray, Sphere * sph)
+//  RayTriangleIntersect(Ray * ray, Triangle * tri)
+//  getRay(Perspective * p, float screenCoord[2], Ray * ray)
+//-----------------------------------------------------------
 int main(int argc, char* argv[]){
   if(argc!=2){//check for arguments
     sprintf(buffer, "Invalid number of arguments: Expected 1, got %d\n", argc-1);
