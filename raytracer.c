@@ -37,7 +37,7 @@ typedef struct {
 	const	float cameraPos[3];
 	const float distanceToScreen;
 	const unsigned int widthWorld;
-	const unsigned int widthPixels; 
+	const unsigned int widthPixels;
 } Perspective;
 
 typedef struct {
@@ -78,17 +78,17 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	float verta[3], vertb[3], vertc[3];
 	float vecray[3], posray[3];
 	float n[3] = {0.0, 0.0, 0.0};
-	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;	
+	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;
 	float m, beta, gamma, t;
 	float a, b, c, d, e, f, g, h, i, j, k, l;
-	
+
 	// Copy the three positions from the triangle class into the x, y, z arrays.
 	memcpy(verta, tri->posa, sizeof(float[3]));
 	memcpy(vertb, tri->posb, sizeof(float[3]));
 	memcpy(vertc, tri->posc, sizeof(float[3]));
 	memcpy(vecray, ray->vector, sizeof(float[3]));
 	memcpy(posray, ray->position, sizeof(float[3]));
-	
+
 	// Set up the a,b, and c components of the 3 vertices.
 	xa = verta[0];
 	xb = vertb[0];
@@ -123,7 +123,7 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	// Calculate M, Beta, Gamma, and t.
 	m = (a * ((e * i) - (h * f))) + (b * ((g * f) - (d * i))) + (c * ((d * h) - (e * g)));
 	t = (-(((f * ((a * k) - (j * b))) + (e * ((j * c) - (a * l))) + (d * ((b * l) - (k * c))))) / m);
-	
+
 	// Return the result of the intersection.
 	if (t < 0) {
 		miss++;
@@ -138,8 +138,8 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	if ((beta < 0) || (beta > (1-gamma))) {
 		miss++;
 		t = 0;
-	}	
-	
+	}
+
 	float u[3] = {0,0,0};
 	float v[3] = {0,0,0};
 	vec3f_sub_new(u, vertb, verta);
@@ -154,12 +154,12 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
   float normal[3] = {0,0,0};
   vec3f_sub_new(normal, hitPostion, n);
   vec3f_normalize(normal);
-  
+
   float lightPos[3] = {0,0,0};
 	if (strcmp(filename, "reference.png" ) == 0) {
   	float refLightPos[3] = {3.0, 5.0,-15.0};
   	memcpy(lightPos,refLightPos,sizeof(float[3]));
-  } else { 
+  } else {
   	float cusLightPos[3] = {0.0, 7.0, -15.0};
   	memcpy(lightPos,cusLightPos,sizeof(float[3]));
   }
@@ -232,7 +232,7 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
 	if (strcmp(filename, "reference.png" ) == 0) {
   	float refLightPos[3] = {3.0, 5.0,-15.0};
   	memcpy(lightPos,refLightPos,sizeof(float[3]));
-  } else { 
+  } else {
   	float cusLightPos[3] = {0.0, 7.0, -15.0};
   	memcpy(lightPos,cusLightPos,sizeof(float[3]));
   }
@@ -281,7 +281,7 @@ int main(int argc, char* argv[]){
 
 	Perspective p = {
 		{0.0,0.0,0.0}, 2, 2, 512
-	};	
+	};
 
 	if (strcmp(filename, "reference.png") == 0) {
 		Sphere sph1 = {
@@ -298,23 +298,23 @@ int main(int argc, char* argv[]){
 
 		Triangle back1 = {
 			{-8,-2,-20},{8,-2,-20},{8,10,-20}, BLUE, 0
-		};	
-		
+		};
+
 		Triangle back2 = {
 			{-8,-2,-20},{8,10,-20},{-8,10,-20}, BLUE, 0
-		};	
+		};
 
 		Triangle bot1 = {
 			{-8,-2,-20},{8,-2,-10},{8,-2,-20}, WHITE, 0
-		};	
-		
+		};
+
 		Triangle bot2 = {
 			{-8,-2,-20},{-8,-2,-10},{8,-2,-10}, WHITE, 0
 		};
 
 		Triangle right = {
-			{8,-2,-20},{8,-2,-10},{8,10,-20}, RED, 0	
-		};	
+			{8,-2,-20},{8,-2,-10},{8,10,-20}, RED, 0
+		};
 
 		unsigned int x;
 		unsigned int y;
@@ -344,38 +344,38 @@ int main(int argc, char* argv[]){
 					ImageArray[pos] = 0;//blue channel
 					ImageArray[pos+1] = 0;//green channel
 					ImageArray[pos+2] = 0;//red channel
-				}	
-		
+				}
+
 				if (b2.hit != 0) {
 					ImageArray[pos] = b2.color[0];//blue channel
 					ImageArray[pos+1] = b2.color[1];//green channel
 					ImageArray[pos+2] = b2.color[2];//red channel
-				}		
+				}
 
 				if (f1.hit != 0) {
 					ImageArray[pos] = f1.color[0];//blue channel
 					ImageArray[pos+1] = f1.color[1];//green channel
 					ImageArray[pos+2] = f1.color[2];//red channel
-				}	
-		
+				}
+
 				if (f2.hit != 0) {
 					ImageArray[pos] = f2.color[0];//blue channel
 					ImageArray[pos+1] = f2.color[1];//green channel
 					ImageArray[pos+2] = f2.color[2];//red channel
-				}	
+				}
 
 				if (rt.hit != 0) {
 					ImageArray[pos] = rt.color[0];//blue channel
 					ImageArray[pos+1] = rt.color[1];//green channel
 					ImageArray[pos+2] = rt.color[2];//red channel
-				}		
+				}
 
 		    if (r1.hit != 0) {
 					ImageArray[pos] = r1.color[0];//blue channel
 					ImageArray[pos+1] = r1.color[1];//green channel
 					ImageArray[pos+2] = r1.color[2];//red channel
-				} 
-			
+				}
+
 		    if (r2.hit != 0) {
 					ImageArray[pos] = r2.color[0];//blue channel
 					ImageArray[pos+1] = r2.color[1];//green channel
@@ -394,40 +394,40 @@ int main(int argc, char* argv[]){
 	} else {
 		Triangle back1 = {
 			{-7,-7,-20},{7,-7,-20},{7,7,-20}, BLUE, 0
-		};	
-		
+		};
+
 		Triangle back2 = {
 			{-7,-7,-20},{7,7,-20},{-7,7,-20}, BLUE, 0
-		};	
+		};
 
 		Triangle bot1 = {
 			{-7,-7,-20},{7,-7,-10},{7,-7,-20}, WHITE, 0
-		};	
-		
+		};
+
 		Triangle bot2 = {
 			{-7,-7,-20},{-7,-7,-10},{7,-7,-10}, WHITE, 0
 		};
 
 		Triangle right1 = {
-			{7,-7,-20},{7,-7,-10},{7,7,-20}, RED, 0	
+			{7,-7,-20},{7,-7,-10},{7,7,-20}, RED, 0
 		};
-			
+
 		Triangle right2 = {
-			{7,-7,-10},{7,7,-10},{7,7,-20}, RED, 0	
+			{7,-7,-10},{7,7,-10},{7,7,-20}, RED, 0
 		};
-		
+
 		Triangle left1 = {
-			{-7,7,-20},{-7,-7,-10},{-7,-7,-20}, GREEN, 0	
+			{-7,7,-20},{-7,-7,-10},{-7,-7,-20}, GREEN, 0
 		};
-			
+
 		Triangle left2 = {
-			{-7,7,-20},{-7,7,-10},{-7,-7,-10}, GREEN, 0	
-		};	
-		
+			{-7,7,-20},{-7,7,-10},{-7,-7,-10}, GREEN, 0
+		};
+
 		Sphere sph1 = {
 			{0,0,-14},2,WHITE,0
 		};
-		
+
 		unsigned int x;
 		unsigned int y;
 		float screenCoord[2];
@@ -457,55 +457,55 @@ int main(int argc, char* argv[]){
 					ImageArray[pos] = 0;//blue channel
 					ImageArray[pos+1] = 0;//green channel
 					ImageArray[pos+2] = 0;//red channel
-				}	
-		
+				}
+
 				if (b2.hit != 0) {
 					ImageArray[pos] = b2.color[0];//blue channel
 					ImageArray[pos+1] = b2.color[1];//green channel
 					ImageArray[pos+2] = b2.color[2];//red channel
-				}		
+				}
 
 				if (f1.hit != 0) {
 					ImageArray[pos] = f1.color[0];//blue channel
 					ImageArray[pos+1] = f1.color[1];//green channel
 					ImageArray[pos+2] = f1.color[2];//red channel
-				}	
-		
+				}
+
 				if (f2.hit != 0) {
 					ImageArray[pos] = f2.color[0];//blue channel
 					ImageArray[pos+1] = f2.color[1];//green channel
 					ImageArray[pos+2] = f2.color[2];//red channel
-				}	
+				}
 
 				if (r1.hit != 0) {
 					ImageArray[pos] = r1.color[0];//blue channel
 					ImageArray[pos+1] = r1.color[1];//green channel
 					ImageArray[pos+2] = r1.color[2];//red channel
-				}		
-				
+				}
+
 				if (r2.hit != 0) {
 					ImageArray[pos] = r2.color[0];//blue channel
 					ImageArray[pos+1] = r2.color[1];//green channel
 					ImageArray[pos+2] = r2.color[2];//red channel
-				}	
-				
+				}
+
 				if (l1.hit != 0) {
 					ImageArray[pos] = l1.color[0];//blue channel
 					ImageArray[pos+1] = l1.color[1];//green channel
 					ImageArray[pos+2] = l1.color[2];//red channel
 				}
-				
+
 				if (l2.hit != 0) {
 					ImageArray[pos] = l2.color[0];//blue channel
 					ImageArray[pos+1] = l2.color[1];//green channel
 					ImageArray[pos+2] = l2.color[2];//red channel
-				}		
-				
+				}
+
 				if (s.hit != 0) {
 					ImageArray[pos] = s.color[0];//blue channel
 					ImageArray[pos+1] = s.color[1];//green channel
 					ImageArray[pos+2] = s.color[2];//red channel
-				}		
+				}
 			}
 		}
 	}
