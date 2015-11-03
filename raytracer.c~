@@ -1,3 +1,17 @@
+/** @file This program demonstrates the process of Ray-Tracing.
+ *				It shoots out a series of rays for each of the pixels
+ *				in order to calculate the intersection of the objects,
+ *				either a triangle or a sphere. It then calculates the
+ *				color of the objects based on the ray hit result. The
+ *				ray hit result tells the color of the object to be drawn.
+ *				This program demonstrates two different scenes done with
+ * 				ray-tracing: reference and custom.
+ *
+ * @author Charles Kralapp
+ * @author Nik Koshcheyev
+ */
+
+// Import helper classes to use vec3f functions.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 #include "vecmat.h"
@@ -8,10 +22,12 @@
 #include <string.h>
 #include <unistd.h>
 
+// Set up the width, height, and arraysize for the image.
 #define WIDTH 512
 #define HEIGHT 512
 #define ARRAYSIZE WIDTH*HEIGHT*3
 
+// Set up the RGB values for each of the colors used in this program.
 #define RED   {255,0,0}
 #define GREEN {0,255,0}
 #define BLUE  {0,0,255}
@@ -26,13 +42,17 @@ char buffer[256];
 unsigned char ImageArray[ARRAYSIZE];
 float pixellength = 2.0/512.0;
 char * filename;
+int hit = 0;
+int miss = 0;
 
+// Create the Ray struct that will calculate the rays being shot.
 typedef struct {
 	float vector[3];
 	float position[3];
 	int numReflections; //10
 } Ray;
 
+// Set up the perspective of the camera.
 typedef struct {
 	const	float cameraPos[3];
 	const float distanceToScreen;
@@ -40,6 +60,7 @@ typedef struct {
 	const unsigned int widthPixels;
 } Perspective;
 
+// This is the sphere struct.
 typedef struct {
   float pos[3];
   float radius;
@@ -47,6 +68,7 @@ typedef struct {
   int reflect;
 } Sphere;
 
+// This is the triangle struct.
 typedef struct {
 	float posa[3];
 	float posb[3];
@@ -55,6 +77,7 @@ typedef struct {
 	int reflect;
 } Triangle;
 
+// This is the struct that represent the pixel hit by a ray.
 typedef struct {
 	int hittype;
 	Sphere sph;
@@ -65,53 +88,39 @@ typedef struct {
   float color[3];
 } RayHit;
 
+/* This is called every time you shoot out a ray at each of the pixels
+	 in the imageArray. This calculates the ray attributes that will be
+	 used to calculate the color of the scene objects. */
 void getRay(Perspective * p, float screenCoord[2], Ray * ray) {
   float camPos[3] = {0,0,0};
-  memcpy(camPos,p->cameraPos,sizeof(float[3]));
-  float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2};
+  memcpy(camPos,p->cameraPos,sizeof(float[3]));		// Set up the position of the camera.
+  float posPixel[3] = {-1 + screenCoord[0]*pixellength, 1 - screenCoord[1]*pixellength, -2}; // Map the location of pixel on screen
 	float srcVec[3];
-	vec3f_sub_new(srcVec, posPixel, camPos);
-	memcpy(ray->vector, srcVec, sizeof(float[3]));
-	vec3f_normalize(ray->vector);
-	memcpy(ray->position, camPos, sizeof(float[3]));
+	vec3f_sub_new(srcVec, posPixel, camPos);	// Subtract the cameraPosition from the pixel position.
+	memcpy(ray->vector, srcVec, sizeof(float[3])); 
+	vec3f_normalize(ray->vector);	// Normalize the ray vector.
+	memcpy(ray->position, camPos, sizeof(float[3]));	
 }
 
-int hit = 0;
-int miss = 0;
-
+/* This is called every time you shoot out a ray at each of the pixels
+	 in the imageArray. This calculates the ray attributes that will be
+	 used to calculate the color of the scene objects. */
 RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
+	// The three triangle vertices.
 	float verta[3], vertb[3], vertc[3];
 	float vecray[3], posray[3];
-<<<<<<< HEAD
-	float n[3] = {0.0, 0.0, 0.0};
-	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;	
-	float m, beta, gamma, t;
-	float a, b, c, d, e, f, g, h, i, j, k, l;
+	float n[3] = {0.0, 0.0, 0.0};	// Normal vector
+	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;	// The components to determine t.	
+	float m, beta, gamma, t;	// Components to determine the Barycentric coordinates.
+	float a, b, c, d, e, f, g, h, i, j, k, l;	
 	
-=======
-	float xa, xb, xc, xd, xe, ya, yb, yc, yd, ye, za, zb, zc, zd, ze;
-	float m, beta, gamma, t;
-	float a, b, c, d, e, f, g, h, i, j, k, l;
-	float closestHit = 100;
-
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
 	// Copy the three positions from the triangle class into the x, y, z arrays.
 	memcpy(verta, tri->posa, sizeof(float[3]));
 	memcpy(vertb, tri->posb, sizeof(float[3]));
 	memcpy(vertc, tri->posc, sizeof(float[3]));
 	memcpy(vecray, ray->vector, sizeof(float[3]));
 	memcpy(posray, ray->position, sizeof(float[3]));
-<<<<<<< HEAD
-	
-=======
 
-	/*
-	printf("Vertex A: %f, %f, %f. Vertex B: %f, %f, %f. Vertex C: %f, %f, %f. \n Ray Vector: %f, %f, %f. Ray Position: %f, %f, %f \n",
-		verta[0], verta[1], verta[2], vertb[0], vertb[1], vertb[2], vertc[0], vertc[1], vertc[2], vecray[0], vecray[1], vecray[2],
-		posray[0], posray[1], posray[2]);
-	*/
-
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
 	// Set up the a,b, and c components of the 3 vertices.
 	xa = verta[0];
 	xb = vertb[0];
@@ -161,9 +170,9 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	if ((beta < 0) || (beta > (1-gamma))) {
 		miss++;
 		t = 0;
-<<<<<<< HEAD
 	}	
 	
+	// Calculate the normal of the triangle
 	float u[3] = {0,0,0};
 	float v[3] = {0,0,0};
 	vec3f_sub_new(u, vertb, verta);
@@ -171,19 +180,17 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
 	vec3f_cross_new(n, v, u);
 	hit++;
 
-=======
-	}
-  hit++;
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
+	// Determine the position that the vector hits the object.
 	float hitPostion[3] = {0,0,0};
   vec3f_scalarMult(vecray, t);
   vec3f_add_new(hitPostion, posray, vecray);
 
+	// Set up the normal of the triangle in regards to the hit position.
   float normal[3] = {0,0,0};
-<<<<<<< HEAD
   vec3f_sub_new(normal, hitPostion, n);
   vec3f_normalize(normal);
   
+  // Set up the light position based on the user selected scene.
   float lightPos[3] = {0,0,0};
 	if (strcmp(filename, "reference.png" ) == 0) {
   	float refLightPos[3] = {3.0, 5.0,-15.0};
@@ -192,22 +199,17 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
   	float cusLightPos[3] = {0.0, 7.0, -15.0};
   	memcpy(lightPos,cusLightPos,sizeof(float[3]));
   }
-=======
-  vec3f_sub_new(normal,hitPostion, &m);
-  vec3f_normalize(normal);
-
-  float lightPos[3] = {5.0,3.0,-15.0};
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
   vec3f_sub_new(lightPos,lightPos,hitPostion);
   vec3f_normalize(lightPos);
 
+	// Calculate the diffuse shading.
   float diffuse = vec3f_dot(normal,lightPos);
   diffuse = MAX(0,diffuse);
-
   float outcolor[3];
   memcpy(outcolor,tri->color,sizeof(float[3]));
   vec3f_scalarMult(outcolor, diffuse);
-
+	
+	// Set up the rayHit object to return.
   RayHit rayHit = {0,{{0,0,0},0,BLACK,0},{{0,0,0},{0,0,0},{0,0,0}, BLACK, 0},{0,0,0},{0,0,0},0,{0,0,0}};
   if(t != 0){
 		rayHit.hittype=1;//zero for spheres, one for triangles
@@ -224,23 +226,6 @@ RayHit RayTriangleIntersect(Ray * ray, Triangle * tri) {
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
     rayHit.color[2] = outcolor[2];
-<<<<<<< HEAD
-=======
-
-		// printf("rayHit = {%f,{{%f,%f,%f},%f,{%f,%f,%f},%f},{{%f,%f,%f},{%f,%f,%f},{%f,%f,%f},{%f,%f,%f},%f},{%f,%f,%f},{%f,%f,%f},%f,{%f,%f,%f}};\n",
-		// rayHit.hittype,
-		// rayHit.sph,
-		// rayHit.normal[0],
-		// rayHit.normal[1],
-		// rayHit.normal[2],
-		// rayHit.lightpos[0],
-		// rayHit.lightpos[1],
-		// rayHit.lightpos[2],
-		// rayHit.hit,
-		// rayHit.color[0],
-		// rayHit.color[1],
-		// rayHit.color[2]);
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
   }
 
   return rayHit;
@@ -324,23 +309,6 @@ RayHit RaySphereIntersect(Ray * ray, Sphere * sph){
     rayHit.color[0] = outcolor[0];
     rayHit.color[1] = outcolor[1];
     rayHit.color[2] = outcolor[2];
-<<<<<<< HEAD
-=======
-
-	  // printf("rayHit = {%f,{{%f,%f,%f},%f,{%f,%f,%f},%f},{{%f,%f,%f},{%f,%f,%f},{%f,%f,%f},{%f,%f,%f},%f},{%f,%f,%f},{%f,%f,%f},%f,{%f,%f,%f}};\n",
-		// rayHit.hittype,
-		// rayHit.sph,
-		// rayHit.normal[0],
-		// rayHit.normal[1],
-		// rayHit.normal[2],
-		// rayHit.lightpos[0],
-		// rayHit.lightpos[1],
-		// rayHit.lightpos[2],
-		// rayHit.hit,
-		// rayHit.color[0],
-		// rayHit.color[1],
-		// rayHit.color[2]);
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
   }
   return rayHit;
 }
@@ -384,7 +352,6 @@ int main(int argc, char* argv[]){
 
 	Perspective p = {
 		{0.0,0.0,0.0}, 2, 2, 512
-<<<<<<< HEAD
 	};	
 
 	if (strcmp(filename, "reference.png") == 0) {
@@ -491,123 +458,6 @@ int main(int argc, char* argv[]){
 					ImageArray[pos+1] = r3.color[1];//green channel
 					ImageArray[pos+2] = r3.color[2];//red channel
 				}
-
-				// progress(pos, ARRAYSIZE);
-=======
-	};
-
-	Sphere sph1 = {
-		{0,0,-16},2,BLUE,0
-	};
-
-  Sphere sph2 = {
-    {3,-1,-14},1,GREEN,0//x and y are swaped and -()
-  };
-
-  Sphere sph3 = {
-    {-3,-1,-14},1,RED,0//x and y are swaped and -()
-  };
-
-	Triangle back1 = {
-		{-8,-2,-20},{8,-2,-20},{8,10,-20}, BLUE, 0
-	};
-
-	Triangle back2 = {
-		{-8,-2,-20},{8,10,-20},{-8,10,-20}, BLUE, 0
-	};
-
-	Triangle bot1 = {
-		{8,-2,-20},{8,-2,-10},{-8,-2,-20}, WHITE, 0
-	};
-
-	Triangle bot2 = {
-		{-8,-2,-20},{-8,-2,-10},{8,-2,-10}, WHITE, 0
-	};
-
-	Triangle right = {
-		{8,-2,-20},{8,-2,-10},{8,10,-20}, RED, 0
-	};
-
-  unsigned int x;
-  unsigned int y;
-	float screenCoord[2];
-
-	for (x=0; x<WIDTH; x++) {
-		for (y=0; y<HEIGHT; y++) {
-  // for (x=255; x<256; x++) {
-  //   for (y=255; y<256; y++) {
-			screenCoord[0] = y;
-			screenCoord[1] = x;
-			// printf("BEFORE[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
-
-			// printf("AFTER[%d,%d] Ray = {%f,%f,%f},{%f,%f,%f},%f\n",x,y,ray.vector[0], ray.vector[1], ray.vector[2],ray.position[0], ray.position[1], ray.position[2],ray.numReflections);
-
-			//{0,0,0}, {0,0,2}, 10
-			// printf("testSphere = {%f,%f,%f},%f,%f\n",testSphere.pos[0],testSphere.pos[1],testSphere.pos[2],testSphere.radius,testSphere.mat);
-			// Calculate and set the color of the pixel.
-
-			int pos = (x * WIDTH + y) * 3;
-      getRay(&p, screenCoord, &ray);
-			RayHit r1 = RaySphereIntersect(&ray, &sph1);
-      RayHit r2 = RaySphereIntersect(&ray, &sph2);
-      RayHit r3 = RaySphereIntersect(&ray, &sph3);
-			RayHit b1 = RayTriangleIntersect(&ray, &back1);
-			RayHit b2 = RayTriangleIntersect(&ray, &back2);
-			RayHit f1 = RayTriangleIntersect(&ray, &bot1);
-			RayHit f2 = RayTriangleIntersect(&ray, &bot2);
-			RayHit rt = RayTriangleIntersect(&ray, &right);
-
-			if (b1.hit != 0) {
-				ImageArray[pos] = b1.color[0];//blue channel
-				ImageArray[pos+1] = b1.color[1];//green channel
-				ImageArray[pos+2] = b1.color[2];//red channel
-			}	else { //draw the black background
-				ImageArray[pos] = 0;//blue channel
-				ImageArray[pos+1] = 0;//green channel
-				ImageArray[pos+2] = 0;//red channel
-			}
-
-			if (b2.hit != 0) {
-				ImageArray[pos] = b2.color[0];//blue channel
-				ImageArray[pos+1] = b2.color[1];//green channel
-				ImageArray[pos+2] = b2.color[2];//red channel
-			}
-
-			if (f1.hit != 0) {
-				ImageArray[pos] = f1.color[0];//blue channel
-				ImageArray[pos+1] = f1.color[1];//green channel
-				ImageArray[pos+2] = f1.color[2];//red channel
-			}
-
-			if (f2.hit != 0) {
-				ImageArray[pos] = f2.color[0];//blue channel
-				ImageArray[pos+1] = f2.color[1];//green channel
-				ImageArray[pos+2] = f2.color[2];//red channel
-			}
-
-			if (rt.hit != 0) {
-				ImageArray[pos] = rt.color[0];//blue channel
-				ImageArray[pos+1] = rt.color[1];//green channel
-				ImageArray[pos+2] = rt.color[2];//red channel
-			}
-
-      if (r1.hit != 0) {
-				ImageArray[pos] = r1.color[0];//blue channel
-				ImageArray[pos+1] = r1.color[1];//green channel
-				ImageArray[pos+2] = r1.color[2];//red channel
-			}
-
-      if (r2.hit != 0) {
-				ImageArray[pos] = r2.color[0];//blue channel
-				ImageArray[pos+1] = r2.color[1];//green channel
-				ImageArray[pos+2] = r2.color[2];//red channel
-			}
-
-			if (r3.hit != 0) {
-				ImageArray[pos] = r3.color[0];//blue channel
-				ImageArray[pos+1] = r3.color[1];//green channel
-				ImageArray[pos+2] = r3.color[2];//red channel
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
 			}
 		}
 	} else {
@@ -619,7 +469,6 @@ int main(int argc, char* argv[]){
 			{-7,-7,-20},{7,7,-20},{-7,7,-20}, BLUE, 0
 		};	
 
-<<<<<<< HEAD
 		Triangle bot1 = {
 			{-7,-7,-20},{7,-7,-10},{7,-7,-20}, WHITE, 0
 		};	
@@ -627,9 +476,6 @@ int main(int argc, char* argv[]){
 		Triangle bot2 = {
 			{-7,-7,-20},{-7,-7,-10},{7,-7,-10}, WHITE, 0
 		};
-=======
-			progress(pos, ARRAYSIZE);
->>>>>>> 00f19dd128db3a04a17b3b1e710487f7023caf77
 
 		Triangle right1 = {
 			{7,-7,-20},{7,-7,-10},{7,7,-20}, RED, 0	
